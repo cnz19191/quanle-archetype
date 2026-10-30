@@ -3,7 +3,9 @@ package com.isiniu.demo.auth.service.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -87,6 +89,20 @@ class SsoUserResolverImplTest {
 
         assertNotNull(loginUser);
         assertEquals("alice", loginUser.username());
+    }
+
+    @Test
+    void provisionKeepsSuffixedUsernameWithinColumnLength() {
+        String longName = "u".repeat(80);
+        when(userRepository.getByExternalId("sub")).thenReturn(null);
+        when(userRepository.getByUsername(anyString())).thenReturn(user(UserModel.STATUS_ENABLED));
+        when(userRepository.save(any())).thenReturn(true);
+
+        LoginUser loginUser = resolver.provision("sub", Map.of("preferred_username", longName));
+
+        assertNotNull(loginUser);
+        assertTrue(loginUser.username().length() <= 64, loginUser.username());
+        assertTrue(loginUser.username().endsWith("-" + Integer.toHexString("sub".hashCode())));
     }
 
     @Test

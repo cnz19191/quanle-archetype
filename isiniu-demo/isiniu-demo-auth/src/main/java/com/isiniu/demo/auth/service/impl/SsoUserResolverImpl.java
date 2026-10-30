@@ -75,9 +75,17 @@ public class SsoUserResolverImpl implements SsoUserResolver {
 
     private String uniqueUsername(String subject, Map<String, Object> claims) {
         String preferred = claim(claims, "preferred_username", claim(claims, "email", "sso-" + subject));
-        String username =
-                preferred.length() > USERNAME_MAX_LENGTH ? preferred.substring(0, USERNAME_MAX_LENGTH) : preferred;
-        return userRepository.getByUsername(username) == null ? username : username + "-" + shortHash(subject);
+        String username = truncate(preferred, USERNAME_MAX_LENGTH);
+        if (userRepository.getByUsername(username) == null) {
+            return username;
+        }
+        // 重名时追加 -hash，先截断前缀，保证总长度不超过 username 列宽
+        String suffix = "-" + shortHash(subject);
+        return truncate(preferred, USERNAME_MAX_LENGTH - suffix.length()) + suffix;
+    }
+
+    private String truncate(String value, int maxLength) {
+        return value.length() > maxLength ? value.substring(0, maxLength) : value;
     }
 
     private String claim(Map<String, Object> claims, String key, String defaultValue) {
