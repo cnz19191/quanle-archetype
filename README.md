@@ -124,7 +124,7 @@ export AUTH_JWT_SECRET='至少32字节的本地密钥，生产从配置中心读
 
 ```sql
 INSERT INTO sys_user (username, password_hash, display_name, status, create_time, update_time, deleted)
-VALUES ('tester', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '测试账号', 1, NOW(), NOW(), 0);
+VALUES ('tester', '$2a$10$Ap5Z2Jbl1CwgqcEC29p/sOE05JyveLFCT3/D2/ftX9UuihuZagsPm', '测试账号', 1, NOW(), NOW(), 0);
 ```
 
 然后登录拿 token：
