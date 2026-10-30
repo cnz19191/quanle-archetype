@@ -78,11 +78,11 @@ public class IsiniuLocalSecurityAutoConfiguration {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint((request, response, ex) -> errorWriter.write(
-                                response, HttpStatus.UNAUTHORIZED, CommonErrorCode.UNAUTHORIZED, "未登录或登录已失效"))
-                        .accessDeniedHandler((request, response, ex) -> errorWriter.write(
-                                response, HttpStatus.FORBIDDEN, CommonErrorCode.FORBIDDEN, "无权限访问")))
+                .exceptionHandling(
+                        handling -> handling.authenticationEntryPoint((request, response, ex) -> errorWriter.write(
+                                        response, HttpStatus.UNAUTHORIZED, CommonErrorCode.UNAUTHORIZED, "未登录或登录已失效"))
+                                .accessDeniedHandler((request, response, ex) -> errorWriter.write(
+                                        response, HttpStatus.FORBIDDEN, CommonErrorCode.FORBIDDEN, "无权限访问")))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

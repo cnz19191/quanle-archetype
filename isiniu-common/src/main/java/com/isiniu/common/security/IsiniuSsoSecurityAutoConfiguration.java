@@ -85,12 +85,13 @@ public class IsiniuSsoSecurityAutoConfiguration {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint((request, response, ex) -> errorWriter.write(
-                                response, HttpStatus.UNAUTHORIZED, CommonErrorCode.UNAUTHORIZED, "未登录或登录已失效"))
-                        .accessDeniedHandler((request, response, ex) -> errorWriter.write(
-                                response, HttpStatus.FORBIDDEN, CommonErrorCode.FORBIDDEN, "无权限访问")))
-                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)));
+                .exceptionHandling(
+                        handling -> handling.authenticationEntryPoint((request, response, ex) -> errorWriter.write(
+                                        response, HttpStatus.UNAUTHORIZED, CommonErrorCode.UNAUTHORIZED, "未登录或登录已失效"))
+                                .accessDeniedHandler((request, response, ex) -> errorWriter.write(
+                                        response, HttpStatus.FORBIDDEN, CommonErrorCode.FORBIDDEN, "无权限访问")))
+                .oauth2ResourceServer(
+                        oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)));
         return http.build();
     }
 }
