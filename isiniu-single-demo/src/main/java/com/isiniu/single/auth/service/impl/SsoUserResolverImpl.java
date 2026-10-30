@@ -32,11 +32,7 @@ public class SsoUserResolverImpl implements SsoUserResolver {
 
     @Override
     public LoginUser resolve(String subject, Map<String, Object> claims) {
-        UserModel user = userRepository.getByExternalId(subject);
-        if (user == null || user.getStatus() == null || user.getStatus() != UserModel.STATUS_ENABLED) {
-            return null;
-        }
-        return AuthConvert.INSTANCE.toLoginUser(user);
+        return toEnabledLoginUser(userRepository.getByExternalId(subject));
     }
 
     @Override
@@ -46,7 +42,7 @@ public class SsoUserResolverImpl implements SsoUserResolver {
         }
         UserModel existing = userRepository.getByExternalId(subject);
         if (existing != null) {
-            return AuthConvert.INSTANCE.toLoginUser(existing);
+            return toEnabledLoginUser(existing);
         }
         UserModel user = new UserModel();
         user.setUsername(uniqueUsername(subject, claims));
@@ -58,9 +54,22 @@ public class SsoUserResolverImpl implements SsoUserResolver {
         } catch (DuplicateKeyException ex) {
             log.warn("[SSO 自动建号冲突] subject={}", subject, ex);
             UserModel concurrent = userRepository.getByExternalId(subject);
-            return concurrent == null ? null : AuthConvert.INSTANCE.toLoginUser(concurrent);
+            return toEnabledLoginUser(concurrent);
         }
         log.info("[SSO 自动建号] userId={}, subject={}", user.getId(), subject);
+        return AuthConvert.INSTANCE.toLoginUser(user);
+    }
+
+    /**
+     * 只有启用状态的用户才能登录，停用用户一律返回 null。
+     *
+     * @param user 本地用户
+     * @return 登录用户，用户不存在或已停用时返回 null
+     */
+    private LoginUser toEnabledLoginUser(UserModel user) {
+        if (user == null || user.getStatus() == null || user.getStatus() != UserModel.STATUS_ENABLED) {
+            return null;
+        }
         return AuthConvert.INSTANCE.toLoginUser(user);
     }
 
