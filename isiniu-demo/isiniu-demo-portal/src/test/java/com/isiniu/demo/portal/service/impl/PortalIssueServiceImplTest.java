@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.isiniu.common.api.PageResult;
 import com.isiniu.common.exception.CustomException;
-import com.isiniu.common.web.CurrentUserHolder;
+import com.isiniu.common.web.LoginUserHolder;
 import com.isiniu.demo.issue.dto.request.IssuePageRequest;
 import com.isiniu.demo.issue.dto.response.IssueResponse;
 import com.isiniu.demo.issue.service.IssueService;
@@ -36,12 +36,12 @@ class PortalIssueServiceImplTest {
 
     @AfterEach
     void tearDown() {
-        CurrentUserHolder.clear();
+        LoginUserHolder.clear();
     }
 
     @Test
     void overviewUsesCurrentUserAndIssueService() {
-        CurrentUserHolder.setUserId(7L);
+        LoginUserHolder.setUserId(7L);
         IssuePageRequest request = new IssuePageRequest();
         PageResult<IssueResponse> page = PageResult.of(0, 1, 10, List.of());
         when(issueService.pageIssue(request)).thenReturn(page);

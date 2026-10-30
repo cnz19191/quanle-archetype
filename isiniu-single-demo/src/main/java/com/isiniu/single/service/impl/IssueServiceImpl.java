@@ -5,7 +5,7 @@ import com.isiniu.common.api.PageResult;
 import com.isiniu.common.enums.CommonErrorCode;
 import com.isiniu.common.exception.CustomException;
 import com.isiniu.common.util.DataParseUtil;
-import com.isiniu.common.web.CurrentUserHolder;
+import com.isiniu.common.web.LoginUserHolder;
 import com.isiniu.single.convert.IssueConvert;
 import com.isiniu.single.dto.bo.IssueBO;
 import com.isiniu.single.dto.bo.IssueCreateBO;
@@ -117,6 +117,17 @@ public class IssueServiceImpl implements IssueService {
         return IssueConvert.INSTANCE.toResponse(issue);
     }
 
+    @Override
+    public IssueResponse getIssue(Long id) {
+        Long reporterId = currentUserId();
+        IssueModel issue = issueRepository.getById(id);
+        if (issue == null || !reporterId.equals(issue.getReporterId())) {
+            log.warn("[问题查询失败] issueId={}, operatorId={}", id, reporterId);
+            throw new CustomException(ErrorCodeEnum.ISSUE_NOT_FOUND, "id=" + id);
+        }
+        return IssueConvert.INSTANCE.toResponse(issue);
+    }
+
     private IssueResponse reuseOrReject(IssueCreateRequest request, IssueModel existing, Long reporterId) {
         String title = DataParseUtil.trimToNull(request.getTitle());
         if (!reporterId.equals(existing.getReporterId()) || !existing.getTitle().equals(title)) {
@@ -129,7 +140,7 @@ public class IssueServiceImpl implements IssueService {
     }
 
     private Long currentUserId() {
-        Long userId = CurrentUserHolder.getUserId();
+        Long userId = LoginUserHolder.getUserId();
         if (userId == null) {
             log.warn("[缺少登录用户]");
             throw new CustomException(CommonErrorCode.UNAUTHORIZED, "未登录");

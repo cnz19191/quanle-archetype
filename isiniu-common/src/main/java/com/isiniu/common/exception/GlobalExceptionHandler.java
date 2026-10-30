@@ -82,6 +82,9 @@ public class GlobalExceptionHandler {
         if (CommonErrorCode.UNAUTHORIZED.getCode().equals(errorCode.getCode())) {
             return HttpStatus.UNAUTHORIZED;
         }
+        if (CommonErrorCode.FORBIDDEN.getCode().equals(errorCode.getCode())) {
+            return HttpStatus.FORBIDDEN;
+        }
         if (CommonErrorCode.PARAM_INVALID.getCode().equals(errorCode.getCode())) {
             return HttpStatus.BAD_REQUEST;
         }

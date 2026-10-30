@@ -1,2 +1,5 @@
+com.isiniu.common.config.IsiniuCorsAutoConfiguration
 com.isiniu.common.config.IsiniuMybatisAutoConfiguration
 com.isiniu.common.config.IsiniuWebAutoConfiguration
+com.isiniu.common.security.IsiniuLocalSecurityAutoConfiguration
+com.isiniu.common.security.IsiniuSsoSecurityAutoConfiguration

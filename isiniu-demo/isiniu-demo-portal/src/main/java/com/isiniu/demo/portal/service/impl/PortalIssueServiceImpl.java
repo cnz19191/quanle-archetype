@@ -3,7 +3,7 @@ package com.isiniu.demo.portal.service.impl;
 import com.isiniu.common.enums.CommonErrorCode;
 import com.isiniu.common.exception.CustomException;
 import com.isiniu.common.util.DataParseUtil;
-import com.isiniu.common.web.CurrentUserHolder;
+import com.isiniu.common.web.LoginUserHolder;
 import com.isiniu.demo.issue.dto.request.IssuePageRequest;
 import com.isiniu.demo.issue.service.IssueService;
 import com.isiniu.demo.portal.dto.response.PortalIssueOverviewResponse;
@@ -26,7 +26,7 @@ public class PortalIssueServiceImpl implements PortalIssueService {
 
     @Override
     public PortalIssueOverviewResponse overview(IssuePageRequest request) {
-        Long userId = CurrentUserHolder.getUserId();
+        Long userId = LoginUserHolder.getUserId();
         if (userId == null) {
             log.warn("[门户问题总览失败] reason=unauthorized");
             throw new CustomException(CommonErrorCode.UNAUTHORIZED, "未登录");

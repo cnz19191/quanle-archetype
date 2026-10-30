@@ -13,7 +13,7 @@ import org.springframework.core.Ordered;
 
 /**
  * Web 公共自动配置：traceId、接口日志、操作日志、全局异常。
- * 登录拦截器和跨域由业务项目的 web 模块显式注册，方便替换认证方式。
+ * 鉴权和跨域由 security / cors 自动配置提供，业务项目只写配置。
  *
  * @author isiniu
  */

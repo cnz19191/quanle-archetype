@@ -1,0 +1,86 @@
+package com.isiniu.demo.auth.service.impl;
+
+import com.isiniu.common.security.AuthProperties;
+import com.isiniu.common.security.LoginUser;
+import com.isiniu.common.security.SsoUserResolver;
+import com.isiniu.demo.auth.convert.AuthConvert;
+import com.isiniu.demo.auth.model.UserModel;
+import com.isiniu.demo.auth.repository.UserRepository;
+import jakarta.annotation.Resource;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+/**
+ * SSO 用户映射：按 {@code sys_user.external_id} 绑定外部主体。
+ *
+ * @author isiniu
+ */
+@Slf4j
+@Component
+public class SsoUserResolverImpl implements SsoUserResolver {
+
+    private static final int USERNAME_MAX_LENGTH = 64;
+
+    @Resource
+    private UserRepository userRepository;
+
+    @Resource
+    private AuthProperties authProperties;
+
+    @Override
+    public LoginUser resolve(String subject, Map<String, Object> claims) {
+        UserModel user = userRepository.getByExternalId(subject);
+        if (user == null || user.getStatus() == null || user.getStatus() != UserModel.STATUS_ENABLED) {
+            return null;
+        }
+        return AuthConvert.INSTANCE.toLoginUser(user);
+    }
+
+    @Override
+    public LoginUser provision(String subject, Map<String, Object> claims) {
+        if (!authProperties.getSso().isAutoProvision()) {
+            return null;
+        }
+        UserModel existing = userRepository.getByExternalId(subject);
+        if (existing != null) {
+            return AuthConvert.INSTANCE.toLoginUser(existing);
+        }
+        UserModel user = new UserModel();
+        user.setUsername(uniqueUsername(subject, claims));
+        user.setDisplayName(claim(claims, "name", user.getUsername()));
+        user.setExternalId(subject);
+        user.setStatus(UserModel.STATUS_ENABLED);
+        try {
+            userRepository.save(user);
+        } catch (DuplicateKeyException ex) {
+            log.warn("[SSO 自动建号冲突] subject={}", subject, ex);
+            UserModel concurrent = userRepository.getByExternalId(subject);
+            return concurrent == null ? null : AuthConvert.INSTANCE.toLoginUser(concurrent);
+        }
+        log.info("[SSO 自动建号] userId={}, subject={}", user.getId(), subject);
+        return AuthConvert.INSTANCE.toLoginUser(user);
+    }
+
+    private String uniqueUsername(String subject, Map<String, Object> claims) {
+        String preferred = claim(claims, "preferred_username", claim(claims, "email", "sso-" + subject));
+        String username = preferred.length() > USERNAME_MAX_LENGTH
+                ? preferred.substring(0, USERNAME_MAX_LENGTH)
+                : preferred;
+        return userRepository.getByUsername(username) == null ? username : username + "-" + shortHash(subject);
+    }
+
+    private String claim(Map<String, Object> claims, String key, String defaultValue) {
+        Object value = claims.get(key);
+        if (value instanceof String text && StringUtils.hasText(text)) {
+            return text;
+        }
+        return defaultValue;
+    }
+
+    private String shortHash(String subject) {
+        return Integer.toHexString(subject.hashCode());
+    }
+}

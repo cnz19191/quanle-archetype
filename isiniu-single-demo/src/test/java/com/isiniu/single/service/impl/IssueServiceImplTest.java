@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.isiniu.common.api.PageResult;
 import com.isiniu.common.enums.CommonErrorCode;
 import com.isiniu.common.exception.CustomException;
-import com.isiniu.common.web.CurrentUserHolder;
+import com.isiniu.common.web.LoginUserHolder;
 import com.isiniu.single.dto.bo.IssueBO;
 import com.isiniu.single.dto.bo.IssuePageQueryBO;
 import com.isiniu.single.dto.request.IssueCreateRequest;
@@ -51,12 +51,12 @@ class IssueServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        CurrentUserHolder.setUserId(7L);
+        LoginUserHolder.setUserId(7L);
     }
 
     @AfterEach
     void tearDown() {
-        CurrentUserHolder.clear();
+        LoginUserHolder.clear();
     }
 
     @Test
@@ -192,7 +192,7 @@ class IssueServiceImplTest {
 
     @Test
     void rejectsAnonymousCall() {
-        CurrentUserHolder.clear();
+        LoginUserHolder.clear();
         CustomException ex =
                 assertThrows(CustomException.class, () -> issueService.createIssue(request("打印机无法连接", "BIZ-1")));
         assertEquals(CommonErrorCode.UNAUTHORIZED.getCode(), ex.getErrorCode().getCode());

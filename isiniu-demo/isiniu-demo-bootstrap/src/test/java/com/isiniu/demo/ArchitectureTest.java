@@ -76,6 +76,17 @@ class ArchitectureTest {
             .as("注入使用 @Resource");
 
     @ArchTest
+    static final ArchRule business_should_not_depend_on_spring_security = noClasses()
+            .that()
+            .resideInAPackage(BASE + "..")
+            .and()
+            .resideOutsideOfPackage(BASE + ".auth..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("org.springframework.security..")
+            .as("业务代码只通过 LoginUserHolder 取用户，不直接依赖 Spring Security");
+
+    @ArchTest
     static final ArchRule no_javax_ee = noClasses()
             .that()
             .resideInAPackage(BASE + "..")

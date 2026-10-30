@@ -18,7 +18,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void customExceptionKeepsBusinessCode() {
-        CustomException ex = new CustomException(CommonErrorCode.UNAUTHORIZED, "缺少请求头 X-User-Id");
+        CustomException ex = new CustomException(CommonErrorCode.UNAUTHORIZED, "未登录");
         var response = handler.handleCustom(ex);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         CommonResult<Void> body = response.getBody();
