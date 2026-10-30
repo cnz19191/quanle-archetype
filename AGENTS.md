@@ -377,7 +377,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 - [ ] ArchUnit：`controller` 不依赖 `repository`、`mapper`；`service` 不依赖 `mapper`；`mapper` 不依赖 `dto.response`；新代码不依赖 `domain` 包
 - [ ] 模块化单体额外检查：领域内部类型不被其他领域依赖；Maven enforcer 禁止 portal / 其他领域编译期依赖领域实现包
 - [ ] 格式检查（Spotless，Palantir Java Format）
-- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，发现 HIGH 或 CRITICAL 就让构建失败。注意 Spring Boot 3.5.16 是最后一个开源 3.x，已于 2026-06-30 EOL，升级到受支持版本需要单独立项
+- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，发现 HIGH 或 CRITICAL 就让构建失败。Spring Boot 3.5.16 是 Maven Central 上最后一个开源 3.x（2026-06-30 EOL），之后的 3.x 修复只在商业版提供。若 Trivy 报出只在商业版有修复的漏洞：在根目录 `.trivyignore` 登记（格式 `CVE-xxxx  # 原因; 到期日 YYYY-MM-DD; 负责人`，到期必须复查），同时推进升级到 Spring Boot 4.x 的 PR。禁止通过降低 severity 或关闭扫描绕过
 - [ ] 至少 1 人 Code Review
 
 ---
