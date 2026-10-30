@@ -1,5 +1,6 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
+import com.isiniu.common.security.LoginUser;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -19,6 +20,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.util.StringUtils;
@@ -47,9 +49,11 @@ public class JwtTokenProvider {
         SecretKey secretKey = secretKey(properties.getJwtSecret());
         JWKSource<SecurityContext> jwkSource = new ImmutableSecret<>(secretKey);
         this.encoder = new NimbusJwtEncoder(jwkSource);
-        this.decoder = NimbusJwtDecoder.withSecretKey(secretKey)
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
+        jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(requireIssuer(properties.getIssuer())));
+        this.decoder = jwtDecoder;
     }
 
     /**
@@ -73,7 +77,7 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 解析并校验 access token。
+     * 解析并校验 access token：签名、有效期和 iss。
      *
      * @param token token 字符串
      * @return 解析后的 JWT
@@ -115,6 +119,13 @@ public class JwtTokenProvider {
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("当前 JDK 不支持 SHA-256", ex);
         }
+    }
+
+    private static String requireIssuer(String issuer) {
+        if (!StringUtils.hasText(issuer)) {
+            throw new IllegalStateException("isiniu.auth.issuer 未配置，LOCAL 模式无法校验令牌签发者");
+        }
+        return issuer;
     }
 
     private SecretKey secretKey(String secret) {

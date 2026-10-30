@@ -56,7 +56,7 @@
 
 **新增任何第三方依赖必须经人确认**，并说明理由。
 
-公司级公共能力来自 `com.isiniu:isiniu-common` 这个 jar，不要把 common 的源码复制进业务项目。
+公司级公共能力来自 `com.isiniu:isiniu-common` 这个 jar，不要把 common 的源码复制进业务项目。鉴权（Spring Security、JWT、SSO）单独放在 `com.isiniu:isiniu-common-auth`，只有 auth 领域和启动模块依赖它；`isiniu-common` 不依赖 Spring Security。
 
 ---
 
@@ -77,10 +77,11 @@ Controller → Service → Repository → Mapper
 
 ### 3.2 跨模块规则
 
-- 跨领域只能调用对方的 **Service 接口**，禁止直接使用对方的 Repository、Mapper、Model、BO、Convert、Service 实现。
-- 允许：领域实现依赖其他领域的 `*-api`（Service 接口、Request/Response、枚举、错误码）。
+- 跨领域只能调用对方 `*-api` 中 `api` 包的接口（如 `IssueQueryApi`），禁止直接使用对方的 Service、Repository、Mapper、Model、BO、Convert。门户（portal）作为编排层可以调用各领域的 `service` 接口。
+- 允许：领域实现依赖其他领域的 `*-api`（`api` 接口、Request/Response、枚举、错误码）。
 - 禁止：领域实现依赖其他领域的实现模块（`*-issue`、`*-comment` 等）。
-- 示例：`{artifactId}-comment` 依赖 `{artifactId}-issue-api`，通过 `IssueService.getIssue` 校验问题归属；Maven enforcer 禁止它依赖 `{artifactId}-issue`。
+- 示例：`{artifactId}-comment` 依赖 `{artifactId}-issue-api`，只注入 `IssueQueryApi.getAccessibleIssue` 校验问题归属；Maven enforcer 禁止它依赖 `{artifactId}-issue`。
+- 领域之间只开放 `*-api` 中的 `api` 包（`XxxQueryApi` 等跨领域接口）以及 `dto.request`、`dto.response`、`enums`、`exception`；`service` 接口只给本领域 controller 和门户（portal）编排层使用。ArchUnit 以白名单校验。
 - 调用第三方系统的代码统一放在 `{base}.client` 包，由 Service 调用，不散落在业务代码里。
 - 两个 Service 互相调用时，把公共逻辑抽到第三个 Service 或 Repository，禁止用 `@Lazy` 绕开循环依赖。
 - 模块化单体里，领域之间的 Java 依赖只能指向对方的 `*-api` 模块。跨领域编排放在 `portal`。
@@ -109,7 +110,7 @@ Controller → Service → Repository → Mapper
 src/main/resources/mapper/
 ```
 
-模块化单体中，领域模块用 `{base}.{领域名}` 代替上面的 `{base}`，例如 `{base}.issue.controller`。`*-api` 模块只放 `service` 接口、`dto.request`、`dto.response`、`enums`、`exception`。
+模块化单体中，领域模块用 `{base}.{领域名}` 代替上面的 `{base}`，例如 `{base}.issue.controller`。`*-api` 模块只放 `service` 接口、`api` 跨领域接口、`dto.request`、`dto.response`、`enums`、`exception`。
 
 > `domain/DTO`、`domain/VO`、`domain/BO` 为历史遗留路径，**新建文件一律不放 `domain/` 下**。新代码不再新增 VO，Mapper 查询结果统一用 BO 或 Model 承接。
 
@@ -132,8 +133,9 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 |---|---|---|---|
 | `{artifactId}-kernel` | 项目级约定，当前是错误码号段 | `isiniu-common` | web、portal、bootstrap、任何领域 |
 | `{artifactId}-web` | 异步线程池、健康检查 | kernel | 领域模块。鉴权、跨域、全局异常、traceId、操作日志用 common 自动配置，不要再写一份 |
-| `{artifactId}-{领域}-api` | 公开 Service 接口、Request、Response、枚举、ErrorCodeEnum | kernel | 实现模块、web、portal |
-| `{artifactId}-{领域}` | Controller、Service 实现、Repository、Mapper、Model、BO、Convert、XML | kernel、本领域 api | web、portal、其他领域的实现模块 |
+| `{artifactId}-{领域}-api` | 公开 Service 接口、跨领域 `api` 接口、Request、Response、枚举、ErrorCodeEnum | kernel | 实现模块、web、portal |
+| `{artifactId}-{领域}` | Controller、Service 实现、Repository、Mapper、Model、BO、Convert、XML | kernel、本领域 api | web、portal、其他领域的实现模块；`isiniu-common-auth`、Spring Security（auth 除外） |
+| `{artifactId}-auth` | 鉴权领域实现 | 同上，另加 `isiniu-common-auth` | 同上 |
 | `{artifactId}-portal` | 面向前端的跨领域聚合 | kernel、各领域 api | 领域实现模块 |
 | `{artifactId}-bootstrap` | 启动类、`application.yml`、Dockerfile、ArchUnit | web、portal、kernel；领域实现用 runtime | 在启动类里写业务 |
 
@@ -331,10 +333,10 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 ## 11. 安全基线
 
 1. 接口默认需要登录；免登录路径只能通过 `isiniu.auth.permit-paths` 配置，新增白名单必须在方案中说明。
-2. 鉴权由 `isiniu-common` 的 Spring Security 自动配置提供，两种模式通过 `isiniu.auth.mode` 切换：
+2. 鉴权由 `isiniu-common-auth` 的 Spring Security 自动配置提供，两种模式通过 `isiniu.auth.mode` 切换：
    - `local`：内置账号密码登录，BCrypt 存储，签发 access token + refresh token；refresh token 只存哈希并轮换。
-   - `sso`：作为 OAuth2 Resource Server 校验 OIDC JWT，配置 `issuer-uri` 或 `jwk-set-uri`，通过 `sys_user.external_id` 绑定本地账号。
-   业务代码只通过 `LoginUserHolder` 取用户信息，不直接依赖 Spring Security 的类型。
+   - `sso`：作为 OAuth2 Resource Server 校验 OIDC JWT，必须配置 `issuer-uri`（校验 iss）和 `audiences`（校验 aud），可选 `jwk-set-uri` 直接指定公钥地址，通过 `sys_user.external_id` 绑定本地账号。
+   业务代码只通过 `isiniu-common` 的 `LoginUserHolder` 取用户信息，不直接依赖 Spring Security 的类型。`LoginUserHolder` 基于 ThreadLocal，由 `isiniu-common-auth` 在认证完成后写入、请求结束时清理。模块化项目中，除 auth 和 bootstrap 外的模块用 Maven enforcer 禁止依赖 `isiniu-common-auth` 和 `org.springframework.security:*`。
 3. 跨域由 `isiniu.web.cors-allowed-origins` 配置，默认 `*` 只用于本地开发；**每个项目上线前必须换成具体域名**。
 4. **数据权限**：查询、修改数据时校验数据归属（当前用户、团队、项目），防止越权访问。
 5. 禁止在代码和配置文件中硬编码密码、密钥、token，一律从配置中心或环境变量读取。数据库密码使用 `DB_PASSWORD`，JWT 密钥使用 `AUTH_JWT_SECRET`。
@@ -375,7 +377,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 - [ ] ArchUnit：`controller` 不依赖 `repository`、`mapper`；`service` 不依赖 `mapper`；`mapper` 不依赖 `dto.response`；新代码不依赖 `domain` 包
 - [ ] 模块化单体额外检查：领域内部类型不被其他领域依赖；Maven enforcer 禁止 portal / 其他领域编译期依赖领域实现包
 - [ ] 格式检查（Spotless，Palantir Java Format）
-- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，发现 HIGH 或 CRITICAL 就让构建失败。注意 Spring Boot 3.5.16 是最后一个开源 3.x，已于 2026-06-30 EOL，升级到受支持版本需要单独立项
+- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，发现 HIGH 或 CRITICAL 就让构建失败。Spring Boot 3.5.16 是 Maven Central 上最后一个开源 3.x（2026-06-30 EOL），之后的 3.x 修复只在商业版提供。若 Trivy 报出只在商业版有修复的漏洞：在根目录 `.trivyignore` 登记（格式 `CVE-xxxx  # 原因; 到期日 YYYY-MM-DD; 负责人`，到期必须复查），同时推进升级到 Spring Boot 4.x 的 PR。禁止通过降低 severity 或关闭扫描绕过
 - [ ] 至少 1 人 Code Review
 
 ---

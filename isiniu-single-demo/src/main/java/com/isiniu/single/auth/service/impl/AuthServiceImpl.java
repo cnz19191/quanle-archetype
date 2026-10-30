@@ -1,10 +1,10 @@
 package com.isiniu.single.auth.service.impl;
 
+import com.isiniu.common.auth.AuthMode;
+import com.isiniu.common.auth.AuthProperties;
+import com.isiniu.common.auth.JwtTokenProvider;
 import com.isiniu.common.enums.CommonErrorCode;
 import com.isiniu.common.exception.CustomException;
-import com.isiniu.common.security.AuthMode;
-import com.isiniu.common.security.AuthProperties;
-import com.isiniu.common.security.JwtTokenProvider;
 import com.isiniu.common.security.LoginUser;
 import com.isiniu.common.web.LoginUserHolder;
 import com.isiniu.single.auth.convert.AuthConvert;
@@ -35,9 +35,8 @@ import org.springframework.util.StringUtils;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private static final int REVOKED = 1;
-
-    private static final int NOT_REVOKED = 0;
+    /** 随机口令的 BCrypt 哈希（cost 与 BCryptPasswordEncoder 默认值一致），只用于拉平登录耗时，任何输入都不会匹配。 */
+    static final String DUMMY_BCRYPT_HASH = "$2a$10$IHwkeEka/YEDOAv/fF8IquZ6soaUvJVLhWB9Y9YlCy.FvdT5dPEgW";
 
     @Resource
     private UserRepository userRepository;
@@ -59,9 +58,11 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse login(LoginRequest request) {
         requireLocalMode();
         UserModel user = userRepository.getByUsername(request.getUsername());
-        if (user == null
-                || !StringUtils.hasText(user.getPasswordHash())
-                || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        boolean hasPassword = user != null && StringUtils.hasText(user.getPasswordHash());
+        // 用户不存在或无本地密码时也跑一次 BCrypt，避免通过响应时间枚举用户名
+        boolean matched = passwordEncoder.matches(
+                request.getPassword(), hasPassword ? user.getPasswordHash() : DUMMY_BCRYPT_HASH);
+        if (!hasPassword || !matched) {
             log.warn("[登录失败] username={}", request.getUsername());
             throw new CustomException(ErrorCodeEnum.AUTH_BAD_CREDENTIALS, "username=" + request.getUsername());
         }
@@ -79,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
         requireLocalMode();
         String tokenHash = jwtTokenProvider.hashRefreshToken(request.getRefreshToken());
         RefreshTokenModel record = refreshTokenRepository.getByTokenHash(tokenHash);
-        if (record == null || record.getRevoked() == null || record.getRevoked() == REVOKED) {
+        if (record == null || record.getRevoked() == null || record.getRevoked() == RefreshTokenModel.REVOKED) {
             log.warn("[刷新令牌失败] reason=invalid");
             throw new CustomException(ErrorCodeEnum.AUTH_REFRESH_INVALID, "refreshToken 无效");
         }
@@ -94,8 +95,10 @@ public class AuthServiceImpl implements AuthService {
         if (user.getStatus() == null || user.getStatus() != UserModel.STATUS_ENABLED) {
             throw new CustomException(ErrorCodeEnum.AUTH_USER_DISABLED, "userId=" + record.getUserId());
         }
-        record.setRevoked(REVOKED);
-        refreshTokenRepository.updateById(record);
+        if (!refreshTokenRepository.revokeIfActive(tokenHash)) {
+            log.warn("[刷新令牌失败] reason=concurrentReuse, userId={}", record.getUserId());
+            throw new CustomException(ErrorCodeEnum.AUTH_REFRESH_INVALID, "refreshToken 无效");
+        }
         log.info("[刷新令牌] userId={}", user.getId());
         return issueTokens(user);
     }
@@ -106,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
         requireLocalMode();
         RefreshTokenModel record =
                 refreshTokenRepository.getByTokenHash(jwtTokenProvider.hashRefreshToken(refreshToken));
-        if (record == null || record.getRevoked() == null || record.getRevoked() == REVOKED) {
+        if (record == null || record.getRevoked() == null || record.getRevoked() == RefreshTokenModel.REVOKED) {
             return;
         }
         Long currentUserId = LoginUserHolder.getUserId();
@@ -114,8 +117,7 @@ public class AuthServiceImpl implements AuthService {
             log.warn("[登出忽略] reason=tokenNotOwned, userId={}", currentUserId);
             return;
         }
-        record.setRevoked(REVOKED);
-        refreshTokenRepository.updateById(record);
+        refreshTokenRepository.revokeIfActive(record.getTokenHash());
         log.info("[登出] userId={}", record.getUserId());
     }
 
@@ -146,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
         record.setUserId(user.getId());
         record.setTokenHash(jwtTokenProvider.hashRefreshToken(refreshToken));
         record.setExpiresAt(LocalDateTime.now().plus(authProperties.getRefreshTokenTtl()));
-        record.setRevoked(NOT_REVOKED);
+        record.setRevoked(RefreshTokenModel.NOT_REVOKED);
         refreshTokenRepository.save(record);
         TokenResponse response = new TokenResponse();
         response.setAccessToken(accessToken);

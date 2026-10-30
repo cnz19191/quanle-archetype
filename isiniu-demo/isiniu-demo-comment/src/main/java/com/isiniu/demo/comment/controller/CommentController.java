@@ -1,6 +1,8 @@
 package com.isiniu.demo.comment.controller;
 
 import com.isiniu.common.api.CommonResult;
+import com.isiniu.common.api.PageRequest;
+import com.isiniu.common.api.PageResult;
 import com.isiniu.common.web.OperationLog;
 import com.isiniu.demo.comment.dto.request.CommentCreateRequest;
 import com.isiniu.demo.comment.dto.response.CommentResponse;
@@ -8,7 +10,7 @@ import com.isiniu.demo.comment.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import java.util.List;
+import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,9 +34,10 @@ public class CommentController {
     private CommentService commentService;
 
     @GetMapping
-    @Operation(summary = "查询问题下的评论")
-    public CommonResult<List<CommentResponse>> list(@PathVariable("issueId") Long issueId) {
-        return CommonResult.buildSuccessResult(commentService.listByIssue(issueId));
+    @Operation(summary = "分页查询问题下的评论")
+    public CommonResult<PageResult<CommentResponse>> page(
+            @PathVariable("issueId") Long issueId, @Valid PageRequest request) {
+        return CommonResult.buildSuccessResult(commentService.pageByIssue(issueId, request));
     }
 
     @PostMapping

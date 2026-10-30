@@ -1,8 +1,10 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.isiniu.common.security.LoginUser;
+import com.isiniu.common.security.SsoUserResolver;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

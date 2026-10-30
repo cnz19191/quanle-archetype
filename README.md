@@ -7,7 +7,8 @@
 | 模块 | 作用 |
 |---|---|
 | `isiniu-parent` | 父 POM，统一 Java 21、Spring Boot 3.5.16、MyBatis Plus 3.5.18.1、Spring Security、Flyway、Spotless |
-| `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、鉴权、跨域、MyBatis 填充、逻辑删除配置 |
+| `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、`LoginUserHolder`、跨域、MyBatis 填充、逻辑删除配置；不依赖 Spring Security |
+| `isiniu-common-auth` | 鉴权：Spring Security 自动配置、LOCAL JWT、SSO 资源服务器，只由 auth 领域和启动模块依赖 |
 | `isiniu-demo` | 模块化单体标杆：kernel、web、auth-api、auth、issue-api、issue、comment-api、comment、portal、bootstrap |
 | `isiniu-single-demo` | 单模块标杆，同一套分层，含鉴权和问题管理示例 |
 | `isiniu-archetype-modular` | 生成模块化单体 |
@@ -30,8 +31,8 @@
 本机路径写在 `.mvn/local-env`（已加入 `.gitignore`，不提交）：
 
 ```bash
-LOCAL_MAVEN_HOME=/Users/quanle/workspace/isiniu/isiniu_app/apache-maven-3.9-archetype
-LOCAL_MAVEN_REPO=/Users/quanle/workspace/isiniu/isiniu_app/isiniu-archetype
+LOCAL_MAVEN_HOME=/path/to/apache-maven-3.9
+LOCAL_MAVEN_REPO=/path/to/maven-repository
 ```
 
 没有这个文件时，`./mvnw` 会下载 Maven 3.9.9 到 `~/.m2/wrapper/dists`，并把依赖装进项目内的 `.mvn/repository`，方便新环境直接跑。IDEA 可以继续用它自己配置的 Maven，只要 local repository 和这里一致；也可以切到 “Use Maven wrapper”。
@@ -52,7 +53,7 @@ LOCAL_MAVEN_REPO=/Users/quanle/workspace/isiniu/isiniu_app/isiniu-archetype
 mvn verify
 ```
 
-`./mvnw install` 会把 `isiniu-parent`、`isiniu-common` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本。
+`./mvnw install` 会把 `isiniu-parent`、`isiniu-common`、`isiniu-common-auth` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本。
 
 私服地址暂未配置。根 `pom.xml` 里保留了注释掉的 `distributionManagement` 占位，等私服就绪后再打开并补上地址。
 
@@ -141,10 +142,15 @@ curl -s -X POST http://127.0.0.1:8080/api/auth/login \
 
 ```bash
 export AUTH_MODE=sso
+# 必填：令牌的 iss 必须与它一致
 export AUTH_SSO_ISSUER_URI='https://idp.example.com/realms/isiniu'
-# 或者企业微信、钉钉这类没有发现端点的 IdP：
+# 必填：本应用的 client_id / audience，令牌的 aud 必须包含其中一个，多个用逗号分隔
+export AUTH_SSO_AUDIENCES='isiniu-demo'
+# 可选：企业微信、钉钉这类没有发现端点的 IdP，直接指定公钥地址
 export AUTH_SSO_JWK_SET_URI='https://idp.example.com/.well-known/jwks.json'
 ```
+
+`issuer-uri` 或 `audiences` 未配置时应用拒绝启动，避免接受同一 IdP 签给其他应用的令牌。
 
 SSO 模式下不提供账号密码登录，只校验外部 OIDC 的 JWT。用户通过 `sys_user.external_id` 绑定，`isiniu.auth.sso.user-id-claim` 决定用哪个 claim 作为主体（默认 `sub`），`auto-provision` 默认关闭。
 
@@ -162,4 +168,10 @@ Archetype 资源由脚本从两个标杆生成，不手改 `archetype-resources`
 python3 scripts/sync-archetypes.py
 ```
 
-`./mvnw verify` 和 `./mvnw install` 也会在打包 archetype 前自动跑这个脚本。
+`./mvnw verify` 和 `./mvnw install` 也会在打包 archetype 前自动跑这个脚本，但**不会**生成并构建示例项目。改完标杆后，在 `./mvnw -B clean install` 之后单独执行：
+
+```bash
+bash scripts/verify-archetypes.sh
+```
+
+它用两个 archetype 各生成一个项目到 `/tmp/isiniu-archetype-out` 并执行 `verify`，CI 中也会运行。

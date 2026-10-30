@@ -17,4 +17,12 @@ public interface RefreshTokenRepository extends MpBaseService<RefreshTokenModel>
      * @return 令牌记录，不存在时返回 null
      */
     RefreshTokenModel getByTokenHash(String tokenHash);
+
+    /**
+     * 原子吊销：仅当令牌仍未吊销时把它置为已吊销。并发请求中只有一个能成功。
+     *
+     * @param tokenHash 令牌哈希
+     * @return 本次调用完成吊销返回 true；令牌不存在或已被吊销返回 false
+     */
+    boolean revokeIfActive(String tokenHash);
 }

@@ -1,0 +1,5 @@
+# Trivy 漏洞放行清单（CI 中 trivy-action 通过 trivyignores 读取）
+# 每行一个漏洞，格式：
+#   CVE-xxxx-xxxxx  # 原因; 到期日 YYYY-MM-DD; 负责人
+# 只登记确认无开源修复版本（如仅商业版 Spring Boot 3.x 修复）或已评估不受影响的漏洞；
+# 到期后必须复查：删除条目或续期并写明理由。

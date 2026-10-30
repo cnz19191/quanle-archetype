@@ -1,5 +1,7 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
+import com.isiniu.common.security.LoginUser;
+import com.isiniu.common.security.SsoUserResolver;
 import java.util.List;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

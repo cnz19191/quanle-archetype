@@ -1,8 +1,8 @@
 package com.isiniu.demo.comment.repository;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.isiniu.common.mybatis.MpBaseService;
 import com.isiniu.demo.comment.model.CommentModel;
-import java.util.List;
 
 /**
  * 评论数据访问。
@@ -21,10 +21,12 @@ public interface CommentRepository extends MpBaseService<CommentModel> {
     CommentModel getByBizNo(Long issueId, String bizNo);
 
     /**
-     * 查询问题下的评论，按创建时间倒序。
+     * 分页查询问题下的评论，按创建时间倒序。
      *
      * @param issueId 问题 ID
-     * @return 评论列表
+     * @param pageNum 页码，从 1 开始
+     * @param pageSize 每页条数
+     * @return 评论分页
      */
-    List<CommentModel> listByIssueId(Long issueId);
+    Page<CommentModel> pageByIssueId(Long issueId, long pageNum, long pageSize);
 }

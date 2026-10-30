@@ -52,6 +52,8 @@ isiniu:
     sso:
       issuer-uri: ${AUTH_SSO_ISSUER_URI:}
       jwk-set-uri: ${AUTH_SSO_JWK_SET_URI:}
+      # SSO 模式必填：本应用在 IdP 注册的 client_id / audience，多个用逗号分隔
+      audiences: ${AUTH_SSO_AUDIENCES:}
       user-id-claim: sub
       roles-claim: roles
       auto-provision: false

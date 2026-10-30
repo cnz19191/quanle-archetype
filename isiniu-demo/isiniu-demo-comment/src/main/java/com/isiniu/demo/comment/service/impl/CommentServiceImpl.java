@@ -1,5 +1,8 @@
 package com.isiniu.demo.comment.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.isiniu.common.api.PageRequest;
+import com.isiniu.common.api.PageResult;
 import com.isiniu.common.enums.CommonErrorCode;
 import com.isiniu.common.exception.CustomException;
 import com.isiniu.common.web.LoginUserHolder;
@@ -10,7 +13,7 @@ import com.isiniu.demo.comment.exception.ErrorCodeEnum;
 import com.isiniu.demo.comment.model.CommentModel;
 import com.isiniu.demo.comment.repository.CommentRepository;
 import com.isiniu.demo.comment.service.CommentService;
-import com.isiniu.demo.issue.service.IssueService;
+import com.isiniu.demo.issue.api.IssueQueryApi;
 import jakarta.annotation.Resource;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -30,15 +33,15 @@ public class CommentServiceImpl implements CommentService {
     @Resource
     private CommentRepository commentRepository;
 
-    /** 跨领域调用：只依赖 issue-api 暴露的 Service 接口。 */
+    /** 跨领域调用：只依赖 issue-api 暴露的只读查询接口。 */
     @Resource
-    private IssueService issueService;
+    private IssueQueryApi issueQueryApi;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CommentResponse createComment(Long issueId, CommentCreateRequest request) {
         Long authorId = currentUserId();
-        issueService.getIssue(issueId);
+        issueQueryApi.getAccessibleIssue(issueId);
         CommentModel existing = commentRepository.getByBizNo(issueId, request.getBizNo());
         if (existing != null) {
             return reuseOrReject(request, existing, authorId);
@@ -57,11 +60,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentResponse> listByIssue(Long issueId) {
-        issueService.getIssue(issueId);
-        return commentRepository.listByIssueId(issueId).stream()
+    public PageResult<CommentResponse> pageByIssue(Long issueId, PageRequest request) {
+        issueQueryApi.getAccessibleIssue(issueId);
+        Page<CommentModel> page = commentRepository.pageByIssueId(issueId, request.getPageNum(), request.getPageSize());
+        List<CommentResponse> list = page.getRecords().stream()
                 .map(CommentConvert.INSTANCE::toResponse)
                 .toList();
+        return PageResult.of(page.getTotal(), (int) page.getCurrent(), (int) page.getSize(), list);
     }
 
     private CommentResponse reuseOrReject(CommentCreateRequest request, CommentModel existing, Long authorId) {
