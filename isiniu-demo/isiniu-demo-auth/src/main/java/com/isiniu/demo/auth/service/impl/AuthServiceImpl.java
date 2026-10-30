@@ -1,10 +1,10 @@
 package com.isiniu.demo.auth.service.impl;
 
+import com.isiniu.common.auth.AuthMode;
+import com.isiniu.common.auth.AuthProperties;
+import com.isiniu.common.auth.JwtTokenProvider;
 import com.isiniu.common.enums.CommonErrorCode;
 import com.isiniu.common.exception.CustomException;
-import com.isiniu.common.security.AuthMode;
-import com.isiniu.common.security.AuthProperties;
-import com.isiniu.common.security.JwtTokenProvider;
 import com.isiniu.common.security.LoginUser;
 import com.isiniu.common.web.LoginUserHolder;
 import com.isiniu.demo.auth.convert.AuthConvert;

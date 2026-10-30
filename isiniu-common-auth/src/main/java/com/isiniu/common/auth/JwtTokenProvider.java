@@ -1,5 +1,6 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
+import com.isiniu.common.security.LoginUser;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;

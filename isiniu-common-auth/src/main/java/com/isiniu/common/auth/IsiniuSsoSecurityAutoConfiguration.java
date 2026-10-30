@@ -1,7 +1,8 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.isiniu.common.enums.CommonErrorCode;
+import com.isiniu.common.security.SsoUserResolver;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -27,6 +28,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.util.StringUtils;
 
 /**
@@ -121,7 +123,8 @@ public class IsiniuSsoSecurityAutoConfiguration {
                                 .accessDeniedHandler((request, response, ex) -> errorWriter.write(
                                         response, HttpStatus.FORBIDDEN, CommonErrorCode.FORBIDDEN, "无权限访问")))
                 .oauth2ResourceServer(
-                        oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)));
+                        oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)))
+                .addFilterBefore(new LoginUserContextFilter(), AuthorizationFilter.class);
         return http.build();
     }
 }

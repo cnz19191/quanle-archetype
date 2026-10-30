@@ -1,5 +1,6 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
+import com.isiniu.common.security.LoginUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

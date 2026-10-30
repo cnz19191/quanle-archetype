@@ -1,4 +1,4 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.isiniu.common.enums.CommonErrorCode;
@@ -20,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
@@ -83,7 +84,8 @@ public class IsiniuLocalSecurityAutoConfiguration {
                                         response, HttpStatus.UNAUTHORIZED, CommonErrorCode.UNAUTHORIZED, "未登录或登录已失效"))
                                 .accessDeniedHandler((request, response, ex) -> errorWriter.write(
                                         response, HttpStatus.FORBIDDEN, CommonErrorCode.FORBIDDEN, "无权限访问")))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new LoginUserContextFilter(), AuthorizationFilter.class);
         return http.build();
     }
 }

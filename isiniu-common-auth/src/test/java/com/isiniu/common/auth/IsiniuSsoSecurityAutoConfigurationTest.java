@@ -1,4 +1,4 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

@@ -14,6 +14,7 @@
 
     <modules>
         <module>isiniu-common</module>
+        <module>isiniu-common-auth</module>
         <module>isiniu-demo</module>
         <module>isiniu-single-demo</module>
         <module>isiniu-archetype-modular</module>
@@ -63,6 +64,11 @@
             <dependency>
                 <groupId>com.isiniu</groupId>
                 <artifactId>isiniu-common</artifactId>
+                <version>${isiniu.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.isiniu</groupId>
+                <artifactId>isiniu-common-auth</artifactId>
                 <version>${isiniu.version}</version>
             </dependency>
             <dependency>

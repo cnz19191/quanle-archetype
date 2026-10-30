@@ -1,4 +1,4 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
 /**
  * 鉴权模式。

@@ -7,7 +7,8 @@
 | 模块 | 作用 |
 |---|---|
 | `isiniu-parent` | 父 POM，统一 Java 21、Spring Boot 3.5.16、MyBatis Plus 3.5.18.1、Spring Security、Flyway、Spotless |
-| `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、鉴权、跨域、MyBatis 填充、逻辑删除配置 |
+| `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、`LoginUserHolder`、跨域、MyBatis 填充、逻辑删除配置；不依赖 Spring Security |
+| `isiniu-common-auth` | 鉴权：Spring Security 自动配置、LOCAL JWT、SSO 资源服务器，只由 auth 领域和启动模块依赖 |
 | `isiniu-demo` | 模块化单体标杆：kernel、web、auth-api、auth、issue-api、issue、comment-api、comment、portal、bootstrap |
 | `isiniu-single-demo` | 单模块标杆，同一套分层，含鉴权和问题管理示例 |
 | `isiniu-archetype-modular` | 生成模块化单体 |
@@ -52,7 +53,7 @@ LOCAL_MAVEN_REPO=/path/to/maven-repository
 mvn verify
 ```
 
-`./mvnw install` 会把 `isiniu-parent`、`isiniu-common` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本。
+`./mvnw install` 会把 `isiniu-parent`、`isiniu-common`、`isiniu-common-auth` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本。
 
 私服地址暂未配置。根 `pom.xml` 里保留了注释掉的 `distributionManagement` 占位，等私服就绪后再打开并补上地址。
 

@@ -1,6 +1,6 @@
 package com.isiniu.single.auth.service.impl;
 
-import com.isiniu.common.security.AuthProperties;
+import com.isiniu.common.auth.AuthProperties;
 import com.isiniu.common.security.LoginUser;
 import com.isiniu.common.security.SsoUserResolver;
 import com.isiniu.single.auth.convert.AuthConvert;

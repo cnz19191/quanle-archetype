@@ -9,10 +9,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.isiniu.common.auth.AuthMode;
+import com.isiniu.common.auth.AuthProperties;
+import com.isiniu.common.auth.JwtTokenProvider;
 import com.isiniu.common.exception.CustomException;
-import com.isiniu.common.security.AuthMode;
-import com.isiniu.common.security.AuthProperties;
-import com.isiniu.common.security.JwtTokenProvider;
 import com.isiniu.single.auth.dto.request.LoginRequest;
 import com.isiniu.single.auth.dto.request.RefreshTokenRequest;
 import com.isiniu.single.auth.dto.response.TokenResponse;

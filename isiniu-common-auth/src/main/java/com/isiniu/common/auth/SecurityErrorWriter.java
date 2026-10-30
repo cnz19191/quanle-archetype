@@ -1,4 +1,4 @@
-package com.isiniu.common.security;
+package com.isiniu.common.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.isiniu.common.api.CommonResult;

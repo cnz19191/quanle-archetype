@@ -8,7 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.isiniu.common.security.AuthProperties;
+import com.isiniu.common.auth.AuthProperties;
 import com.isiniu.common.security.LoginUser;
 import com.isiniu.single.auth.model.UserModel;
 import com.isiniu.single.auth.repository.UserRepository;

@@ -91,6 +91,9 @@
                             <rules>
                                 <bannedDependencies>
                                     <excludes>
+                                        <!-- 业务模块不依赖 Spring Security，只通过 LoginUserHolder 取用户 -->
+                                        <exclude>com.isiniu:isiniu-common-auth</exclude>
+                                        <exclude>org.springframework.security:*</exclude>
                                         <!-- 允许 issue-api，禁止 issue 实现 -->
                                         <exclude>com.isiniu:isiniu-demo-issue</exclude>
                                         <exclude>com.isiniu:isiniu-demo-auth</exclude>
