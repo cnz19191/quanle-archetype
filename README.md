@@ -6,7 +6,7 @@
 
 | 模块 | 作用 |
 |---|---|
-| `isiniu-parent` | 父 POM，统一 Java 21、Spring Boot 3.5.16、MyBatis Plus 3.5.18.1、Spring Security、Flyway、Spotless |
+| `isiniu-parent` | 父 POM，统一 Java 25、Spring Boot 3.5.16、MyBatis Plus 3.5.18.1、Spring Security、Flyway、Spotless |
 | `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、`LoginUserHolder`、跨域、MyBatis 填充、逻辑删除配置；不依赖 Spring Security |
 | `isiniu-common-auth` | 鉴权：Spring Security 自动配置、LOCAL JWT、SSO 资源服务器，只由 auth 领域和启动模块依赖 |
 | `isiniu-demo` | 模块化单体标杆：kernel、web、auth-api、auth、issue-api、issue、comment-api、comment、portal、bootstrap |
@@ -18,7 +18,7 @@
 
 ## 本地构建
 
-需要 JDK 21 和 Maven 3.8+。
+需要 JDK 25 和 Maven 3.8+。Spring Boot 3.5.16 支持到 Java 25。为了在 JDK 25 上编译和检查格式：Lombok 使用 1.18.46（与 Boot 3.5.16 BOM 一致；1.18.38 在 JDK 25 上会让 javac 失败），ArchUnit 使用 1.4.2（1.4.0 读不了 Java 25 的 class 文件），Palantir Java Format 使用 2.71.0（2.50.0 在 JDK 25 上调用已删除的 javac API）。
 
 本仓库自带 `./mvnw`，优先复用本机已有的项目 Maven 和仓库，不读取全局 `M2_HOME` / `mvn`：
 

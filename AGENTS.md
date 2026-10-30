@@ -44,7 +44,7 @@
 
 | 类别 | 选型 |
 |---|---|
-| 语言 | Java 21 |
+| 语言 | Java 25 |
 | 框架 | Spring Boot 3.5.16（import 一律用 `jakarta.*`，禁止 Java EE 的 `javax.*`） |
 | 鉴权 | Spring Security 6.5，LOCAL / SSO 双模式 |
 | 持久层 | MyBatis Plus 3.5 + MyBatis XML |
