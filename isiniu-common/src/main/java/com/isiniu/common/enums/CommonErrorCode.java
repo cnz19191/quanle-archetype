@@ -20,7 +20,10 @@ public enum CommonErrorCode implements ErrorCode {
     SYSTEM_ERROR("SYS0002", "系统异常"),
 
     /** 未登录。 */
-    UNAUTHORIZED("SYS0003", "未登录或登录已失效");
+    UNAUTHORIZED("SYS0003", "未登录或登录已失效"),
+
+    /** 已登录但无权限。 */
+    FORBIDDEN("SYS0004", "无权限访问");
 
     private final String code;
 
