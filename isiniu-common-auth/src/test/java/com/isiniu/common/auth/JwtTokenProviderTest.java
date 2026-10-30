@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtException;
 
 /**
  * LOCAL 模式 JWT 签发与解析。
@@ -41,6 +42,25 @@ class JwtTokenProviderTest {
         assertEquals("tester", jwt.getClaimAsString("username"));
         assertEquals(List.of("ADMIN"), jwt.getClaimAsStringList("roles"));
         assertTrue(provider.accessTokenTtlSeconds() > 0);
+    }
+
+    @Test
+    void rejectsTokenFromOtherIssuerWithSameSecret() {
+        AuthProperties other = new AuthProperties();
+        other.setJwtSecret(properties.getJwtSecret());
+        other.setIssuer("other-app");
+        other.setAccessTokenTtl(Duration.ofMinutes(5));
+        String foreignToken = new JwtTokenProvider(other).createAccessToken(new LoginUser(7L, "tester", List.of()));
+
+        JwtTokenProvider provider = new JwtTokenProvider(properties);
+
+        assertThrows(JwtException.class, () -> provider.decodeAccessToken(foreignToken));
+    }
+
+    @Test
+    void rejectsBlankIssuer() {
+        properties.setIssuer(" ");
+        assertThrows(IllegalStateException.class, () -> new JwtTokenProvider(properties));
     }
 
     @Test
