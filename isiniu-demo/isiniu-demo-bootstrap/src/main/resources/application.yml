@@ -9,6 +9,12 @@ spring:
     username: ${DB_USERNAME:isiniu}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    placeholders:
+      tableOptions: " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+      updateTimeOnUpdate: " ON UPDATE CURRENT_TIMESTAMP"
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
@@ -24,7 +30,31 @@ mybatis-plus:
 
 isiniu:
   web:
+    # 上线前必须换成具体域名，不要保留 *
     cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+  auth:
+    # local：内置账号密码登录；sso：校验外部 OIDC JWT
+    mode: ${AUTH_MODE:local}
+    issuer: isiniu-demo
+    # LOCAL 模式必填，至少 32 字节，不要写进配置文件
+    jwt-secret: ${AUTH_JWT_SECRET:}
+    access-token-ttl: 30m
+    refresh-token-ttl: 7d
+    permit-paths:
+      - /api/auth/login
+      - /api/auth/refresh
+      - /api/health
+      - /swagger-ui.html
+      - /swagger-ui/**
+      - /v3/api-docs/**
+      - /actuator/health
+      - /error
+    sso:
+      issuer-uri: ${AUTH_SSO_ISSUER_URI:}
+      jwk-set-uri: ${AUTH_SSO_JWK_SET_URI:}
+      user-id-claim: sub
+      roles-claim: roles
+      auto-provision: false
 
 logging:
   pattern:

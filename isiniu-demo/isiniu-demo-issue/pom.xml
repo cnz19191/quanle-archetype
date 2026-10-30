@@ -52,6 +52,10 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -72,6 +76,8 @@
                                         <exclude>com.isiniu:isiniu-demo-web</exclude>
                                         <exclude>com.isiniu:isiniu-demo-portal</exclude>
                                         <exclude>com.isiniu:isiniu-demo-bootstrap</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-auth</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-comment</exclude>
                                     </excludes>
                                 </bannedDependencies>
                             </rules>
