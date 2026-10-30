@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<CommonResult<Void>> handleMethodValidation(HandlerMethodValidationException ex) {
-        String message = ex.getAllValidationResults().stream()
+        String message = ex.getParameterValidationResults().stream()
                 .flatMap(result -> result.getResolvableErrors().stream())
                 .map(MessageSourceResolvable::getDefaultMessage)
                 .filter(StringUtils::hasText)
