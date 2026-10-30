@@ -99,8 +99,12 @@ def modular_parent_pom() -> str:
     <modules>
         <module>${rootArtifactId}-kernel</module>
         <module>${rootArtifactId}-web</module>
+        <module>${rootArtifactId}-auth-api</module>
+        <module>${rootArtifactId}-auth</module>
         <module>${rootArtifactId}-issue-api</module>
         <module>${rootArtifactId}-issue</module>
+        <module>${rootArtifactId}-comment-api</module>
+        <module>${rootArtifactId}-comment</module>
         <module>${rootArtifactId}-portal</module>
         <module>${rootArtifactId}-bootstrap</module>
     </modules>
@@ -209,11 +213,11 @@ def simplified_agents(full: str) -> str:
 本项目是一个 Maven 模块，适合小工具和内部服务。包结构按第 3.3 节，全部放在 `{base}` 下。
 
 - 公共能力依赖 `isiniu-common`，不要复制它的源码
-- 登录拦截器注册、跨域、异步线程池放在 `config`
+- 鉴权、跨域由 `isiniu-common` 自动配置提供；异步线程池、健康检查放在 `config` / `controller`
 - 分层约束由 ArchUnit 检查：controller 不依赖 repository/mapper，service 不依赖 mapper，mapper 不依赖 dto.response
 - 出现第二个业务领域、需要隔离 Mapper 和 Model 时，改用模块化单体模板
 
-标杆业务是问题管理，类名以 `Issue` 开头。
+标杆业务是问题管理，类名以 `Issue` 开头；鉴权代码在 `auth` 包。
 """
     text = full[:start] + replacement + full[end:]
     text = text.replace("| 标杆模块 | `${artifactId}-issue`（问题管理，新代码照它写） |", "| 标杆模块 | `IssueController`（问题管理，新代码照它写） |")

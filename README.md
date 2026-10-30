@@ -6,14 +6,14 @@
 
 | 模块 | 作用 |
 |---|---|
-| `isiniu-parent` | 父 POM，统一 Java 21、Spring Boot 3.2.12、MyBatis Plus 3.5.18.1、Spotless |
-| `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、MyBatis 填充、逻辑删除配置 |
-| `isiniu-demo` | 模块化单体标杆：kernel、web、issue-api、issue、portal、bootstrap |
-| `isiniu-single-demo` | 单模块标杆，同一套分层和问题管理示例 |
+| `isiniu-parent` | 父 POM，统一 Java 21、Spring Boot 3.5.16、MyBatis Plus 3.5.18.1、Spring Security、Flyway、Spotless |
+| `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、鉴权、跨域、MyBatis 填充、逻辑删除配置 |
+| `isiniu-demo` | 模块化单体标杆：kernel、web、auth-api、auth、issue-api、issue、comment-api、comment、portal、bootstrap |
+| `isiniu-single-demo` | 单模块标杆，同一套分层，含鉴权和问题管理示例 |
 | `isiniu-archetype-modular` | 生成模块化单体 |
 | `isiniu-archetype-single` | 生成单模块服务 |
 
-`isiniu-demo` 的依赖方向：领域实现只依赖 kernel 和本领域 api；portal 只依赖 api，编译期看不到 Repository / Mapper / Model；bootstrap 用 runtime 把实现组装进来。Maven enforcer 卡住跨领域实现依赖，ArchUnit 检查分层。
+`isiniu-demo` 的依赖方向：领域实现只依赖 kernel、本领域 api，以及**其他领域的 api**（`comment` 依赖 `issue-api` 就是示例）；portal 只依赖 api，编译期看不到 Repository / Mapper / Model；bootstrap 用 runtime 把实现组装进来。Maven enforcer 卡住跨领域实现依赖，ArchUnit 检查分层。
 
 ## 本地构建
 
@@ -23,15 +23,25 @@
 mvn verify
 ```
 
-测试不连接 MySQL。Service 用 Mockito，Mapper XML 用 H2 的 MySQL 模式。生产库仍然是 MySQL 8，建表脚本在 `isiniu-demo/docs/sql/` 和 `isiniu-single-demo/docs/sql/`，确认后再执行。
+测试不连接 MySQL。Service 用 Mockito，数据库用 H2 的 MySQL 模式。生产库仍然是 MySQL 8，表结构由 Flyway 管理，脚本在各模块的 `src/main/resources/db/migration/`，命名规范见 `AGENTS.md` 第 8.4 节。
 
 ## 安装 Archetype
 
+不配置私服，先在本地验证：
+
 ```bash
-mvn install
+# 1. 安装 parent、common 和两个 archetype 到本地仓库
+mvn clean install
+
+# 2. 生成模块化项目和单模块项目（命令见下文）
+
+# 3. 两个生成项目分别执行
+mvn verify
 ```
 
-这会把 `isiniu-parent`、`isiniu-common` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本（本地仓库或公司私服）。
+`mvn install` 会把 `isiniu-parent`、`isiniu-common` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本。
+
+私服地址暂未配置。根 `pom.xml` 里保留了注释掉的 `distributionManagement` 占位，等私服就绪后再打开并补上地址。
 
 ## 生成模块化单体
 
@@ -87,16 +97,43 @@ mvn verify
 
 ## 运行标杆
 
-数据库账号密码走环境变量，不要写进配置文件：
+数据库账号、JWT 密钥都走环境变量，不要写进配置文件：
 
 ```bash
 export DB_URL='jdbc:mysql://127.0.0.1:3306/isiniu_demo?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true'
 export DB_USERNAME=isiniu
 export DB_PASSWORD=
+export AUTH_JWT_SECRET='至少32字节的本地密钥，生产从配置中心读取'
 mvn -pl isiniu-demo-bootstrap -am spring-boot:run
 ```
 
-登录是占位拦截器，请求头 `X-User-Id` 传用户 ID。生产要换成统一认证。接口文档在 `/swagger-ui.html`。
+启动时 Flyway 自动建表。本地验证可以插一个测试账号（密码是 `password`，**只在本地用**）：
+
+```sql
+INSERT INTO sys_user (username, password_hash, display_name, status, create_time, update_time, deleted)
+VALUES ('tester', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '测试账号', 1, NOW(), NOW(), 0);
+```
+
+然后登录拿 token：
+
+```bash
+curl -s -X POST http://127.0.0.1:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"tester","password":"password"}'
+```
+
+后续请求带 `Authorization: Bearer <accessToken>`。接口文档在 `/swagger-ui.html`。
+
+### 切换 SSO 模式
+
+```bash
+export AUTH_MODE=sso
+export AUTH_SSO_ISSUER_URI='https://idp.example.com/realms/isiniu'
+# 或者企业微信、钉钉这类没有发现端点的 IdP：
+export AUTH_SSO_JWK_SET_URI='https://idp.example.com/.well-known/jwks.json'
+```
+
+SSO 模式下不提供账号密码登录，只校验外部 OIDC 的 JWT。用户通过 `sys_user.external_id` 绑定，`isiniu.auth.sso.user-id-claim` 决定用哪个 claim 作为主体（默认 `sub`），`auto-provision` 默认关闭。
 
 单模块标杆：
 

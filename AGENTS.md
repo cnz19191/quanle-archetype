@@ -6,7 +6,7 @@
 > - 标注【项目配置】的内容每个项目需按实际填写。Archetype 生成时会替换占位符。
 > - 子模块可以有自己的简短 `AGENTS.md`，只说明该模块边界；与本文件冲突时以本文件为准。
 
-脚手架仓库中的标杆取值：根包 `com.isiniu.demo`（单模块标杆为 `com.isiniu.single`），作者 `isiniu`，错误码前缀 `ISN`，标杆领域 `issue`（问题管理）。
+脚手架仓库中的标杆取值：根包 `com.isiniu.demo`（单模块标杆为 `com.isiniu.single`），作者 `isiniu`，错误码前缀 `ISN`，标杆领域 `auth`（鉴权）、`issue`（问题管理）、`comment`（评论）。
 
 ---
 
@@ -45,9 +45,10 @@
 | 类别 | 选型 |
 |---|---|
 | 语言 | Java 21 |
-| 框架 | Spring Boot 3.2（import 一律用 `jakarta.*`，禁止 Java EE 的 `javax.*`） |
+| 框架 | Spring Boot 3.5.16（import 一律用 `jakarta.*`，禁止 Java EE 的 `javax.*`） |
+| 鉴权 | Spring Security 6.5，LOCAL / SSO 双模式 |
 | 持久层 | MyBatis Plus 3.5 + MyBatis XML |
-| 数据库 | MySQL 8.x |
+| 数据库 | MySQL 8.x，表结构由 Flyway 管理 |
 | 对象转换 | MapStruct |
 | 工具类 | Hutool、Spring `CollectionUtils` / `StringUtils` |
 | 接口文档 | SpringDoc（`@Tag`、`@Operation`、`@Schema`） |
@@ -77,6 +78,9 @@ Controller → Service → Repository → Mapper
 ### 3.2 跨模块规则
 
 - 跨领域只能调用对方的 **Service 接口**，禁止直接使用对方的 Repository、Mapper、Model、BO、Convert、Service 实现。
+- 允许：领域实现依赖其他领域的 `*-api`（Service 接口、Request/Response、枚举、错误码）。
+- 禁止：领域实现依赖其他领域的实现模块（`*-issue`、`*-comment` 等）。
+- 示例：`isiniu-demo-comment` 依赖 `isiniu-demo-issue-api`，通过 `IssueService.getIssue` 校验问题归属；Maven enforcer 禁止它依赖 `isiniu-demo-issue`。
 - 调用第三方系统的代码统一放在 `{base}.client` 包，由 Service 调用，不散落在业务代码里。
 - 两个 Service 互相调用时，把公共逻辑抽到第三个 Service 或 Repository，禁止用 `@Lazy` 绕开循环依赖。
 - 模块化单体里，领域之间的 Java 依赖只能指向对方的 `*-api` 模块。跨领域编排放在 `portal`。
@@ -127,13 +131,15 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 | 模块 | 放什么 | 可以依赖 | 禁止 |
 |---|---|---|---|
 | `{artifactId}-kernel` | 项目级约定，当前是错误码号段 | `isiniu-common` | web、portal、bootstrap、任何领域 |
-| `{artifactId}-web` | 登录拦截器注册、跨域、异步线程池、健康检查 | kernel | 领域模块。全局异常、traceId、操作日志用 common，不要再写一份 |
+| `{artifactId}-web` | 异步线程池、健康检查 | kernel | 领域模块。鉴权、跨域、全局异常、traceId、操作日志用 common 自动配置，不要再写一份 |
 | `{artifactId}-{领域}-api` | 公开 Service 接口、Request、Response、枚举、ErrorCodeEnum | kernel | 实现模块、web、portal |
 | `{artifactId}-{领域}` | Controller、Service 实现、Repository、Mapper、Model、BO、Convert、XML | kernel、本领域 api | web、portal、其他领域的实现模块 |
 | `{artifactId}-portal` | 面向前端的跨领域聚合 | kernel、各领域 api | 领域实现模块 |
 | `{artifactId}-bootstrap` | 启动类、`application.yml`、Dockerfile、ArchUnit | web、portal、kernel；领域实现用 runtime | 在启动类里写业务 |
 
-领域实现模块的 Maven 依赖里不要出现其他领域的实现 artifact。portal 的 enforcer 会禁止依赖 `*-issue` 这类实现包。ArchUnit 再检查：controller 不依赖 repository/mapper，service 不依赖 mapper，mapper 不依赖 `dto.response`，以及一个领域的 repository/mapper/model/实现不能被另一个领域引用。
+标杆包含三个领域：`auth`（登录与用户）、`issue`（问题）、`comment`（评论，用来演示跨领域调用）。
+
+领域实现模块的 Maven 依赖里不要出现其他领域的实现 artifact。portal 的 enforcer 会禁止依赖 `*-issue`、`*-comment` 这类实现包。ArchUnit 再检查：controller 不依赖 repository/mapper，service 不依赖 mapper，mapper 不依赖 `dto.response`，以及一个领域的 repository/mapper/model/实现不能被另一个领域引用。
 
 新增领域：
 
@@ -142,7 +148,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 3. 在 `kernel` 的 `ErrorCodeRange` 登记号段。
 4. 其他领域只能依赖新的 `*-api`。portal 增加对 api 的依赖，并在 enforcer 里禁止依赖新的实现模块。
 5. bootstrap 增加该实现模块的 runtime 依赖。
-6. DDL 放到 `docs/sql/`，技术方案写清索引，等人确认后再执行。
+6. Flyway 迁移脚本放到新模块的 `src/main/resources/db/migration/`，版本号按新的百号段起；技术方案写清索引，等人确认后再提交。
 
 小工具和内部服务使用单模块模板，不套这套模块。那个模板的 `AGENTS.md` 用简化版替换本节。
 <!-- MODULE_STRUCTURE_END -->
@@ -184,7 +190,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 | 依赖注入 | `@Resource`（禁止 `@Autowired`） |
 | 实体 | `@Data` + `@TableName` + `@TableId(type = IdType.AUTO)`，实现 `Serializable` |
 | DTO 字段 | 全部加 `@Schema`；必填字段加 `@NotNull` / `@NotBlank` |
-| 匿名接口 | `@Anonymous`（定义在 isiniu-common） |
+| 免登录接口 | 配置 `isiniu.auth.permit-paths`，不写注解 |
 
 ### 5.2 字段类型
 
@@ -230,8 +236,20 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 2. 错误码格式为「模块前缀 + 4 位序号」。
    - 框架公共错误码在 `CommonErrorCode`，前缀 `SYS`，放在 isiniu-common。
    - 业务错误码在各领域的 `ErrorCodeEnum`，前缀用【项目配置】的模块前缀，序号落在 kernel `ErrorCodeRange` 分配的号段内。同一错误码全项目只有一个含义。
-3. 全局异常处理器统一转换为 `CommonResult`，Controller 内不写 `try-catch`。处理器由 isiniu-common 自动配置提供。
-4. 禁止：空 `catch`、`catch` 后只打日志不处理且不说明原因、`e.printStackTrace()`、用异常做流程控制。
+3. **号段分配表**（规则常量在 `com.isiniu.common.error.ErrorCodeRange`，项目内已分配清单在各项目的 kernel `ErrorCodeRange`）：
+
+   | 段 | 前缀 | 范围 | 归属 |
+   |---|---|---|---|
+   | 框架通用 | `SYS` | 0001-0099 | `isiniu-common` 的 `CommonErrorCode` |
+   | 鉴权 | 项目前缀 | 0100-0199 | auth 领域 |
+   | 第 1 个业务领域 | 项目前缀 | 0200-0299 | 标杆为 issue |
+   | 第 2 个业务领域 | 项目前缀 | 0300-0399 | 标杆为 comment |
+   | 后续领域 | 项目前缀 | 每 100 个一段 | 在 kernel `ErrorCodeRange` 按顺序登记 |
+
+   新领域必须先在 kernel `ErrorCodeRange` 登记号段，再写 `ErrorCodeEnum`；序号不得跨段重用。
+
+4. 全局异常处理器统一转换为 `CommonResult`，Controller 内不写 `try-catch`。处理器由 isiniu-common 自动配置提供。
+5. 禁止：空 `catch`、`catch` 后只打日志不处理且不说明原因、`e.printStackTrace()`、用异常做流程控制。
 
 ---
 
@@ -278,7 +296,16 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 
 1. 每张表必须有：`id`、`create_time`、`update_time`、`deleted`（逻辑删除，实体字段加 `@TableLogic`）。
 2. 逻辑删除的全局配置写在 `application.yml` 的 `mybatis-plus.global-config.db-config`。
-3. 新建表、改表结构必须在技术方案中给出 DDL / ALTER 语句和索引设计，**经人确认后执行**；变更脚本统一放 `docs/sql/`。
+3. 新建表、改表结构必须在技术方案中给出 DDL / ALTER 语句和索引设计，**经人确认后执行**；变更脚本统一放各模块的 `src/main/resources/db/migration/`。
+
+### 8.4 Flyway 迁移规范
+
+1. 脚本命名 `V{版本}__{描述}.sql`，例如 `V101__create_issue_main.sql`。
+2. 版本号按领域分块：问题 1xx、鉴权 2xx、评论 3xx，新领域按顺序申请下一段百号，避免多模块合并时冲突。
+3. **已经执行过的脚本禁止修改**，改表只能追加新版本脚本。
+4. 表结构必须同时兼容 MySQL 8 和 H2 的 MySQL 模式：不使用 `KEY`、`ENGINE`、`CHARSET` 等 MySQL 专有内联语法；表选项和 `ON UPDATE` 用 Flyway placeholder 注入（`tableOptions`、`updateTimeOnUpdate`）。
+5. 测试环境通过 Flyway 执行同一批脚本，不要再单写 `schema-h2.sql`。
+6. 生产库账号需要 `CREATE`、`ALTER`、`INDEX` 权限；迁移脚本随应用启动执行，发布前先在预发库演练。
 
 ---
 
@@ -303,11 +330,15 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 
 ## 11. 安全基线
 
-1. 接口默认需要登录；匿名接口必须标 `@Anonymous` 并在方案中说明。
-2. 脚手架的登录是占位实现：拦截器读取请求头 `X-User-Id`。生产必须换成统一认证，这项要人确认后才能上线。
-3. **数据权限**：查询、修改数据时校验数据归属（当前用户、团队、项目），防止越权访问。
-4. 禁止在代码和配置文件中硬编码密码、密钥、token，一律从配置中心或环境变量读取。数据库密码使用 `DB_PASSWORD`。
-5. 用户输入一律视为不可信：参数校验、防 SQL 注入、文件上传校验类型和大小。
+1. 接口默认需要登录；免登录路径只能通过 `isiniu.auth.permit-paths` 配置，新增白名单必须在方案中说明。
+2. 鉴权由 `isiniu-common` 的 Spring Security 自动配置提供，两种模式通过 `isiniu.auth.mode` 切换：
+   - `local`：内置账号密码登录，BCrypt 存储，签发 access token + refresh token；refresh token 只存哈希并轮换。
+   - `sso`：作为 OAuth2 Resource Server 校验 OIDC JWT，配置 `issuer-uri` 或 `jwk-set-uri`，通过 `sys_user.external_id` 绑定本地账号。
+   业务代码只通过 `LoginUserHolder` 取用户信息，不直接依赖 Spring Security 的类型。
+3. 跨域由 `isiniu.web.cors-allowed-origins` 配置，默认 `*` 只用于本地开发；**每个项目上线前必须换成具体域名**。
+4. **数据权限**：查询、修改数据时校验数据归属（当前用户、团队、项目），防止越权访问。
+5. 禁止在代码和配置文件中硬编码密码、密钥、token，一律从配置中心或环境变量读取。数据库密码使用 `DB_PASSWORD`，JWT 密钥使用 `AUTH_JWT_SECRET`。
+6. 用户输入一律视为不可信：参数校验、防 SQL 注入、文件上传校验类型和大小。
 
 ---
 
@@ -344,7 +375,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 - [ ] ArchUnit：`controller` 不依赖 `repository`、`mapper`；`service` 不依赖 `mapper`；`mapper` 不依赖 `dto.response`；新代码不依赖 `domain` 包
 - [ ] 模块化单体额外检查：领域内部类型不被其他领域依赖；Maven enforcer 禁止 portal / 其他领域编译期依赖领域实现包
 - [ ] 格式检查（Spotless，Palantir Java Format）
-- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，Spring Boot 3.2 已停止开源维护，扫描先记录结果，不因此阻断合并，升级 Boot 前需要人确认
+- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，发现 HIGH 或 CRITICAL 就让构建失败。注意 Spring Boot 3.5.16 是最后一个开源 3.x，已于 2026-06-30 EOL，升级到受支持版本需要单独立项
 - [ ] 至少 1 人 Code Review
 
 ---
@@ -357,7 +388,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 | 技术方案 | `docs/design/` |
 | 架构决策记录（ADR） | `docs/adr/NNNN-标题.md` |
 | 项目状态页 | `docs/STATUS.md` |
-| DDL | `docs/sql/` |
+| DDL / 迁移脚本 | `src/main/resources/db/migration/` |
 
 任务涉及设计变化时，AI 需同步更新对应的技术方案文档。
 
