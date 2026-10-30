@@ -19,9 +19,15 @@
 
 需要 JDK 21 和 Maven 3.8+。
 
+本仓库自带 `./mvnw`，固定 Maven 3.9.9，并把本地仓库隔离到项目内的 `.mvn/repository`，不读取全局 `M2_HOME` / `mvn`。推荐统一用它：
+
 ```bash
-mvn verify
+./mvnw -version
+./mvnw -B spotless:apply
+./mvnw -B verify
 ```
+
+首次运行会把 Maven 下载到 `~/.m2/wrapper/dists`，依赖装进 `.mvn/repository`（已加入 `.gitignore`）。用 IDEA 时，在 Maven 设置里选择使用 Maven Wrapper 即可。
 
 测试不连接 MySQL。Service 用 Mockito，数据库用 H2 的 MySQL 模式。生产库仍然是 MySQL 8，表结构由 Flyway 管理，脚本在各模块的 `src/main/resources/db/migration/`，命名规范见 `AGENTS.md` 第 8.4 节。
 
@@ -31,7 +37,7 @@ mvn verify
 
 ```bash
 # 1. 安装 parent、common 和两个 archetype 到本地仓库
-mvn clean install
+./mvnw -B clean install
 
 # 2. 生成模块化项目和单模块项目（命令见下文）
 
@@ -39,7 +45,7 @@ mvn clean install
 mvn verify
 ```
 
-`mvn install` 会把 `isiniu-parent`、`isiniu-common` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本。
+`./mvnw install` 会把 `isiniu-parent`、`isiniu-common` 和两个 archetype 装进本地仓库。新项目的父 POM 是 `com.isiniu:isiniu-parent`，所以生成出的工程要能解析到这次安装的版本。
 
 私服地址暂未配置。根 `pom.xml` 里保留了注释掉的 `distributionManagement` 占位，等私服就绪后再打开并补上地址。
 
@@ -48,7 +54,7 @@ mvn verify
 适合正式业务。带 kernel、web、portal、bootstrap，以及一个可复制的问题管理领域。
 
 ```bash
-mvn archetype:generate -B \
+./mvnw -B archetype:generate \
   -DarchetypeGroupId=com.isiniu \
   -DarchetypeArtifactId=isiniu-archetype-modular \
   -DarchetypeVersion=1.0.0-SNAPSHOT \
@@ -75,7 +81,7 @@ mvn verify
 适合小工具和内部服务。分层、示例和门禁与标杆相同，不拆领域模块。
 
 ```bash
-mvn archetype:generate -B \
+./mvnw -B archetype:generate \
   -DarchetypeGroupId=com.isiniu \
   -DarchetypeArtifactId=isiniu-archetype-single \
   -DarchetypeVersion=1.0.0-SNAPSHOT \
@@ -104,7 +110,7 @@ export DB_URL='jdbc:mysql://127.0.0.1:3306/isiniu_demo?useUnicode=true&character
 export DB_USERNAME=isiniu
 export DB_PASSWORD=
 export AUTH_JWT_SECRET='至少32字节的本地密钥，生产从配置中心读取'
-mvn -pl isiniu-demo-bootstrap -am spring-boot:run
+./mvnw -pl isiniu-demo-bootstrap -am spring-boot:run
 ```
 
 启动时 Flyway 自动建表。本地验证可以插一个测试账号（密码是 `password`，**只在本地用**）：
@@ -138,7 +144,7 @@ SSO 模式下不提供账号密码登录，只校验外部 OIDC 的 JWT。用户
 单模块标杆：
 
 ```bash
-mvn -pl isiniu-single-demo spring-boot:run
+./mvnw -pl isiniu-single-demo spring-boot:run
 ```
 
 ## 改完标杆后同步模板
@@ -149,4 +155,4 @@ Archetype 资源由脚本从两个标杆生成，不手改 `archetype-resources`
 python3 scripts/sync-archetypes.py
 ```
 
-`mvn verify` 和 `mvn install` 也会在打包 archetype 前自动跑这个脚本。
+`./mvnw verify` 和 `./mvnw install` 也会在打包 archetype 前自动跑这个脚本。

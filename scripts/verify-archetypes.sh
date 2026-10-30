@@ -3,6 +3,12 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GEN="${1:-/tmp/isiniu-archetype-out}"
+REPO="$ROOT/.mvn/repository"
+if [ -x "$ROOT/mvnw" ]; then
+  MVN="$ROOT/mvnw"
+else
+  MVN="mvn"
+fi
 rm -rf "$GEN"
 mkdir -p "$GEN"
 
@@ -11,7 +17,7 @@ generate() {
   local artifact="$2"
   local pkg="$3"
   local prefix="$4"
-  mvn -B -N -f "$ROOT/pom.xml" archetype:generate \
+  "$MVN" -B -N -f "$ROOT/pom.xml" -Dmaven.repo.local="$REPO" archetype:generate \
     -DgroupId=com.example \
     -DartifactId="$artifact" \
     -Dversion=1.0.0-SNAPSHOT \
@@ -32,7 +38,7 @@ generate() {
     echo "AGENTS.md did not receive the generated package"
     exit 1
   fi
-  (cd "$GEN/$artifact" && mvn -B verify)
+  (cd "$GEN/$artifact" && "$MVN" -B -Dmaven.repo.local="$REPO" verify)
 }
 
 generate isiniu-archetype-modular sample-modular com.example.modular MDL
