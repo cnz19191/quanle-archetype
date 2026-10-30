@@ -1,0 +1,2 @@
+com.isiniu.common.auth.IsiniuLocalSecurityAutoConfiguration
+com.isiniu.common.auth.IsiniuSsoSecurityAutoConfiguration

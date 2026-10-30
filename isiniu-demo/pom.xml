@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.isiniu</groupId>
+        <artifactId>isiniu-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>isiniu-demo</artifactId>
+    <packaging>pom</packaging>
+    <name>isiniu-demo</name>
+    <description>模块化单体标杆。领域模块只依赖 kernel 与本领域 api。</description>
+
+    <modules>
+        <module>isiniu-demo-kernel</module>
+        <module>isiniu-demo-web</module>
+        <module>isiniu-demo-auth-api</module>
+        <module>isiniu-demo-auth</module>
+        <module>isiniu-demo-issue-api</module>
+        <module>isiniu-demo-issue</module>
+        <module>isiniu-demo-comment-api</module>
+        <module>isiniu-demo-comment</module>
+        <module>isiniu-demo-portal</module>
+        <module>isiniu-demo-bootstrap</module>
+    </modules>
+</project>

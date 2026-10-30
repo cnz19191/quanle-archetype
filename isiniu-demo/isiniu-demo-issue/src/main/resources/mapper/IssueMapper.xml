@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.isiniu.demo.issue.mapper.IssueMapper">
+
+    <select id="selectIssuePage" resultType="com.isiniu.demo.issue.dto.bo.IssueBO">
+        SELECT
+            id,
+            title,
+            content,
+            status,
+            reporter_id,
+            biz_no,
+            create_time,
+            update_time
+        FROM issue_main
+        <where>
+            deleted = 0
+            AND reporter_id = #{query.reporterId}
+            <if test="query.title != null and query.title != ''">
+                AND title LIKE CONCAT('%', #{query.title}, '%')
+            </if>
+            <if test="query.status != null">
+                AND status = #{query.status}
+            </if>
+        </where>
+        ORDER BY update_time DESC, id DESC
+    </select>
+
+    <!-- update_time 由列定义 ON UPDATE CURRENT_TIMESTAMP 维护，手写 XML 不会触发 MetaObjectHandler。 -->
+    <update id="updateIssueStatus">
+        UPDATE issue_main
+        <set>
+            status = #{targetStatus}
+        </set>
+        WHERE id = #{id}
+          AND status = #{expectStatus}
+          AND reporter_id = #{reporterId}
+          AND deleted = 0
+    </update>
+</mapper>
