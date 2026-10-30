@@ -77,10 +77,11 @@ Controller → Service → Repository → Mapper
 
 ### 3.2 跨模块规则
 
-- 跨领域只能调用对方的 **Service 接口**，禁止直接使用对方的 Repository、Mapper、Model、BO、Convert、Service 实现。
-- 允许：领域实现依赖其他领域的 `*-api`（Service 接口、Request/Response、枚举、错误码）。
+- 跨领域只能调用对方 `*-api` 中 `api` 包的接口（如 `IssueQueryApi`），禁止直接使用对方的 Service、Repository、Mapper、Model、BO、Convert。门户（portal）作为编排层可以调用各领域的 `service` 接口。
+- 允许：领域实现依赖其他领域的 `*-api`（`api` 接口、Request/Response、枚举、错误码）。
 - 禁止：领域实现依赖其他领域的实现模块（`*-issue`、`*-comment` 等）。
-- 示例：`{artifactId}-comment` 依赖 `{artifactId}-issue-api`，通过 `IssueService.getIssue` 校验问题归属；Maven enforcer 禁止它依赖 `{artifactId}-issue`。
+- 示例：`{artifactId}-comment` 依赖 `{artifactId}-issue-api`，只注入 `IssueQueryApi.getAccessibleIssue` 校验问题归属；Maven enforcer 禁止它依赖 `{artifactId}-issue`。
+- 领域之间只开放 `*-api` 中的 `api` 包（`XxxQueryApi` 等跨领域接口）以及 `dto.request`、`dto.response`、`enums`、`exception`；`service` 接口只给本领域 controller 和门户（portal）编排层使用。ArchUnit 以白名单校验。
 - 调用第三方系统的代码统一放在 `{base}.client` 包，由 Service 调用，不散落在业务代码里。
 - 两个 Service 互相调用时，把公共逻辑抽到第三个 Service 或 Repository，禁止用 `@Lazy` 绕开循环依赖。
 - 模块化单体里，领域之间的 Java 依赖只能指向对方的 `*-api` 模块。跨领域编排放在 `portal`。
@@ -109,7 +110,7 @@ Controller → Service → Repository → Mapper
 src/main/resources/mapper/
 ```
 
-模块化单体中，领域模块用 `{base}.{领域名}` 代替上面的 `{base}`，例如 `{base}.issue.controller`。`*-api` 模块只放 `service` 接口、`dto.request`、`dto.response`、`enums`、`exception`。
+模块化单体中，领域模块用 `{base}.{领域名}` 代替上面的 `{base}`，例如 `{base}.issue.controller`。`*-api` 模块只放 `service` 接口、`api` 跨领域接口、`dto.request`、`dto.response`、`enums`、`exception`。
 
 > `domain/DTO`、`domain/VO`、`domain/BO` 为历史遗留路径，**新建文件一律不放 `domain/` 下**。新代码不再新增 VO，Mapper 查询结果统一用 BO 或 Model 承接。
 

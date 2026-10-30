@@ -10,7 +10,7 @@ import com.isiniu.demo.comment.exception.ErrorCodeEnum;
 import com.isiniu.demo.comment.model.CommentModel;
 import com.isiniu.demo.comment.repository.CommentRepository;
 import com.isiniu.demo.comment.service.CommentService;
-import com.isiniu.demo.issue.service.IssueService;
+import com.isiniu.demo.issue.api.IssueQueryApi;
 import jakarta.annotation.Resource;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -30,15 +30,15 @@ public class CommentServiceImpl implements CommentService {
     @Resource
     private CommentRepository commentRepository;
 
-    /** 跨领域调用：只依赖 issue-api 暴露的 Service 接口。 */
+    /** 跨领域调用：只依赖 issue-api 暴露的只读查询接口。 */
     @Resource
-    private IssueService issueService;
+    private IssueQueryApi issueQueryApi;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CommentResponse createComment(Long issueId, CommentCreateRequest request) {
         Long authorId = currentUserId();
-        issueService.getIssue(issueId);
+        issueQueryApi.getAccessibleIssue(issueId);
         CommentModel existing = commentRepository.getByBizNo(issueId, request.getBizNo());
         if (existing != null) {
             return reuseOrReject(request, existing, authorId);
@@ -58,7 +58,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentResponse> listByIssue(Long issueId) {
-        issueService.getIssue(issueId);
+        issueQueryApi.getAccessibleIssue(issueId);
         return commentRepository.listByIssueId(issueId).stream()
                 .map(CommentConvert.INSTANCE::toResponse)
                 .toList();

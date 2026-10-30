@@ -6,6 +6,7 @@ import com.isiniu.demo.issue.dto.bo.IssueCreateBO;
 import com.isiniu.demo.issue.dto.bo.IssuePageQueryBO;
 import com.isiniu.demo.issue.dto.request.IssueCreateRequest;
 import com.isiniu.demo.issue.dto.request.IssuePageRequest;
+import com.isiniu.demo.issue.dto.response.IssueBriefResponse;
 import com.isiniu.demo.issue.dto.response.IssueResponse;
 import com.isiniu.demo.issue.enums.IssueStatusEnum;
 import com.isiniu.demo.issue.model.IssueModel;
@@ -54,4 +55,6 @@ public interface IssueConvert {
     @Mapping(target = "createTime", dateFormat = "yyyy-MM-dd HH:mm:ss")
     @Mapping(target = "updateTime", dateFormat = "yyyy-MM-dd HH:mm:ss")
     IssueResponse toResponse(IssueBO bo);
+
+    IssueBriefResponse toBriefResponse(IssueResponse response);
 }

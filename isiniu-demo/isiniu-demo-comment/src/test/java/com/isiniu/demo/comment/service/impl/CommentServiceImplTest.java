@@ -12,7 +12,7 @@ import com.isiniu.demo.comment.dto.request.CommentCreateRequest;
 import com.isiniu.demo.comment.exception.ErrorCodeEnum;
 import com.isiniu.demo.comment.model.CommentModel;
 import com.isiniu.demo.comment.repository.CommentRepository;
-import com.isiniu.demo.issue.service.IssueService;
+import com.isiniu.demo.issue.api.IssueQueryApi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class CommentServiceImplTest {
     private CommentRepository commentRepository;
 
     @Mock
-    private IssueService issueService;
+    private IssueQueryApi issueQueryApi;
 
     @InjectMocks
     private CommentServiceImpl commentService;
@@ -54,7 +54,7 @@ class CommentServiceImplTest {
 
         commentService.createComment(1L, request("评论内容", "CMT-1"));
 
-        verify(issueService).getIssue(1L);
+        verify(issueQueryApi).getAccessibleIssue(1L);
         verify(commentRepository).save(any(CommentModel.class));
     }
 

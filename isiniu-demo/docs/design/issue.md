@@ -2,7 +2,7 @@
 
 ## 落点
 
-领域实现 `*-issue`，公开契约 `*-issue-api`。门户只调用 `IssueService`。
+领域实现 `*-issue`，公开契约 `*-issue-api`。门户只调用 `IssueService`；其他领域只调用 `IssueQueryApi`。
 
 ## 接口
 
