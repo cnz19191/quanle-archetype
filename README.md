@@ -6,7 +6,7 @@
 
 | 模块 | 作用 |
 |---|---|
-| `isiniu-parent` | 父 POM，统一 Java 21、Spring Boot 4.1.2、MyBatis Plus 3.5.18.1、Spring Security 7.1、Flyway 12、Spotless |
+| `isiniu-parent` | 父 POM，统一 Java 25、Spring Boot 4.1.2、MyBatis Plus 3.5.18.1、Spring Security 7.1、Flyway 12、Spotless |
 | `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、`LoginUserHolder`、跨域、MyBatis 填充、逻辑删除配置；不依赖 Spring Security |
 | `isiniu-common-auth` | 鉴权：Spring Security 自动配置、LOCAL JWT、SSO 资源服务器，只由 auth 领域和启动模块依赖 |
 | `isiniu-demo` | 模块化单体标杆：kernel、web、auth-api、auth、issue-api、issue、comment-api、comment、portal、bootstrap |
@@ -22,13 +22,15 @@
 
 | 依赖 | 现在 |
 |---|---|
+| JDK | 25 |
 | Spring Boot | 4.1.2 |
 | MyBatis-Plus | 3.5.18.1，改用 `mybatis-plus-spring-boot4-starter` |
 | SpringDoc | 3.2.0（`springdoc-openapi-starter-webmvc-ui`） |
 | MapStruct | 1.6.3（1.7 只有 Beta，继续用 1.6 的 GA） |
 | Flyway | 12.4.0，由 `spring-boot-starter-flyway` 管理；MySQL 仍加 `flyway-mysql` |
 | ArchUnit | 1.5.1（JUnit 6） |
-| Lombok | 1.18.48 |
+| Lombok | 1.18.48（已支持 JDK 25） |
+| Palantir Java Format | 2.71.0（2.50.0 在 JDK 25 上会调用已删除的 javac API） |
 | Nimbus JOSE JWT | 10.9.1，由 Spring Security 7.1.2 带入。业务代码不直接依赖 JJWT |
 
 Starter 按 Boot 4 迁移指南拆开：`spring-boot-starter-web` 改为 `spring-boot-starter-webmvc`，`spring-boot-starter-aop` 改为 `spring-boot-starter-aspectj`，`spring-boot-starter-oauth2-resource-server` 改为 `spring-boot-starter-security-oauth2-resource-server`。MockMvc 测试额外依赖 `spring-boot-starter-webmvc-test`。
@@ -43,7 +45,7 @@ Starter 按 Boot 4 迁移指南拆开：`spring-boot-starter-web` 改为 `spring
 
 ## 本地构建
 
-需要 JDK 21 和 Maven 3.8+。
+需要 JDK 25 和 Maven 3.8+。
 
 本仓库自带 `./mvnw`，优先复用本机已有的项目 Maven 和仓库，不读取全局 `M2_HOME` / `mvn`：
 

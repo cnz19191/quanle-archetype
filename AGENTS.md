@@ -44,7 +44,7 @@
 
 | 类别 | 选型 |
 |---|---|
-| 语言 | Java 21 |
+| 语言 | Java 25 |
 | 框架 | Spring Boot 4.1.2（Spring Framework 7.0、Jackson 3；import 一律用 `jakarta.*`，禁止 Java EE 的 `javax.*`） |
 | 鉴权 | Spring Security 7.1，LOCAL / SSO 双模式。LOCAL 用 HS256 JWT，SSO 用 OAuth2 Resource Server 校验 `iss` 和 `aud` |
 | 持久层 | MyBatis Plus 3.5.18（`mybatis-plus-spring-boot4-starter`）+ MyBatis XML |
