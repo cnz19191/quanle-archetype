@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -57,6 +58,21 @@ public class IsiniuLocalSecurityAutoConfiguration {
     @ConditionalOnMissingBean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
         return new JwtAuthenticationFilter(tokenProvider);
+    }
+
+    /**
+     * 过滤器只挂在 Spring Security 链里。它是 {@code Filter} 类型的 Bean，不关掉的话 Spring Boot 还会把它注册到 Servlet 容器，每个请求解析两次。
+     *
+     * @param jwtAuthenticationFilter JWT 过滤器
+     * @return 已禁用的注册
+     */
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration =
+                new FilterRegistrationBean<>(jwtAuthenticationFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
