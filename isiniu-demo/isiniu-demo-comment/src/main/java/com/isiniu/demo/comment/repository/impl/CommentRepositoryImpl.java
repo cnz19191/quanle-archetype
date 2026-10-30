@@ -1,10 +1,10 @@
 package com.isiniu.demo.comment.repository.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.isiniu.common.mybatis.MpBaseServiceImpl;
 import com.isiniu.demo.comment.mapper.CommentMapper;
 import com.isiniu.demo.comment.model.CommentModel;
 import com.isiniu.demo.comment.repository.CommentRepository;
-import java.util.List;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -28,11 +28,11 @@ public class CommentRepositoryImpl extends MpBaseServiceImpl<CommentMapper, Comm
     }
 
     @Override
-    public List<CommentModel> listByIssueId(Long issueId) {
+    public Page<CommentModel> pageByIssueId(Long issueId, long pageNum, long pageSize) {
         return lambdaQuery()
                 .eq(CommentModel::getIssueId, issueId)
                 .orderByDesc(CommentModel::getCreateTime)
                 .orderByDesc(CommentModel::getId)
-                .list();
+                .page(new Page<>(pageNum, pageSize));
     }
 }

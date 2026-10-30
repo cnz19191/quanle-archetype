@@ -124,8 +124,17 @@ class IssueApiTest {
 
         mockMvc.perform(get("/api/issues/" + id + "/comments").header(HttpHeaders.AUTHORIZATION, bearer(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].content").value("已处理"));
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.pageNum").value(1))
+                .andExpect(jsonPath("$.data.pageSize").value(10))
+                .andExpect(jsonPath("$.data.list[0].content").value("已处理"));
+
+        // 评论列表分页上限 100
+        mockMvc.perform(get("/api/issues/" + id + "/comments")
+                        .param("pageSize", "101")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("SYS0001"));
 
         mockMvc.perform(get("/api/portal/issues").header(HttpHeaders.AUTHORIZATION, bearer(token)))
                 .andExpect(status().isOk())

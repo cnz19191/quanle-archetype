@@ -1,5 +1,8 @@
 package com.isiniu.demo.comment.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.isiniu.common.api.PageRequest;
+import com.isiniu.common.api.PageResult;
 import com.isiniu.common.enums.CommonErrorCode;
 import com.isiniu.common.exception.CustomException;
 import com.isiniu.common.web.LoginUserHolder;
@@ -57,11 +60,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentResponse> listByIssue(Long issueId) {
+    public PageResult<CommentResponse> pageByIssue(Long issueId, PageRequest request) {
         issueQueryApi.getAccessibleIssue(issueId);
-        return commentRepository.listByIssueId(issueId).stream()
+        Page<CommentModel> page = commentRepository.pageByIssueId(issueId, request.getPageNum(), request.getPageSize());
+        List<CommentResponse> list = page.getRecords().stream()
                 .map(CommentConvert.INSTANCE::toResponse)
                 .toList();
+        return PageResult.of(page.getTotal(), (int) page.getCurrent(), (int) page.getSize(), list);
     }
 
     private CommentResponse reuseOrReject(CommentCreateRequest request, CommentModel existing, Long authorId) {
