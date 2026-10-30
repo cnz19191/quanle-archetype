@@ -47,17 +47,20 @@ public class AuthProperties {
     private Sso sso = new Sso();
 
     /**
-     * SSO 模式配置。{@code jwkSetUri} 优先于 {@code issuerUri}。
+     * SSO 模式配置。{@code issuerUri} 和 {@code audiences} 必填；{@code jwkSetUri} 配置后优先用它取公钥，否则从 issuer 自动发现。
      */
     @Getter
     @Setter
     public static class Sso {
 
-        /** OIDC issuer 地址，配置后自动发现 jwk set。 */
+        /** OIDC issuer 地址，必填。令牌的 iss 必须与它完全一致；未配置 jwk-set-uri 时从它自动发现 jwk set。 */
         private String issuerUri;
 
         /** 直接指定 JWK Set 地址，适合企业微信、钉钉等不自带发现端点的 IdP。 */
         private String jwkSetUri;
+
+        /** 本应用接受的 aud，必填。令牌的 aud 至少包含其中一个，防止同一 IdP 签给其他应用的令牌被接受。 */
+        private List<String> audiences = new ArrayList<>();
 
         /** 取哪个 claim 作为本地用户标识。 */
         private String userIdClaim = "sub";

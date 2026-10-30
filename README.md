@@ -141,10 +141,15 @@ curl -s -X POST http://127.0.0.1:8080/api/auth/login \
 
 ```bash
 export AUTH_MODE=sso
+# 必填：令牌的 iss 必须与它一致
 export AUTH_SSO_ISSUER_URI='https://idp.example.com/realms/isiniu'
-# 或者企业微信、钉钉这类没有发现端点的 IdP：
+# 必填：本应用的 client_id / audience，令牌的 aud 必须包含其中一个，多个用逗号分隔
+export AUTH_SSO_AUDIENCES='isiniu-demo'
+# 可选：企业微信、钉钉这类没有发现端点的 IdP，直接指定公钥地址
 export AUTH_SSO_JWK_SET_URI='https://idp.example.com/.well-known/jwks.json'
 ```
+
+`issuer-uri` 或 `audiences` 未配置时应用拒绝启动，避免接受同一 IdP 签给其他应用的令牌。
 
 SSO 模式下不提供账号密码登录，只校验外部 OIDC 的 JWT。用户通过 `sys_user.external_id` 绑定，`isiniu.auth.sso.user-id-claim` 决定用哪个 claim 作为主体（默认 `sub`），`auto-provision` 默认关闭。
 

@@ -333,7 +333,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 1. 接口默认需要登录；免登录路径只能通过 `isiniu.auth.permit-paths` 配置，新增白名单必须在方案中说明。
 2. 鉴权由 `isiniu-common` 的 Spring Security 自动配置提供，两种模式通过 `isiniu.auth.mode` 切换：
    - `local`：内置账号密码登录，BCrypt 存储，签发 access token + refresh token；refresh token 只存哈希并轮换。
-   - `sso`：作为 OAuth2 Resource Server 校验 OIDC JWT，配置 `issuer-uri` 或 `jwk-set-uri`，通过 `sys_user.external_id` 绑定本地账号。
+   - `sso`：作为 OAuth2 Resource Server 校验 OIDC JWT，必须配置 `issuer-uri`（校验 iss）和 `audiences`（校验 aud），可选 `jwk-set-uri` 直接指定公钥地址，通过 `sys_user.external_id` 绑定本地账号。
    业务代码只通过 `LoginUserHolder` 取用户信息，不直接依赖 Spring Security 的类型。
 3. 跨域由 `isiniu.web.cors-allowed-origins` 配置，默认 `*` 只用于本地开发；**每个项目上线前必须换成具体域名**。
 4. **数据权限**：查询、修改数据时校验数据归属（当前用户、团队、项目），防止越权访问。
