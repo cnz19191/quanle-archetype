@@ -80,7 +80,7 @@ Controller → Service → Repository → Mapper
 - 跨领域只能调用对方的 **Service 接口**，禁止直接使用对方的 Repository、Mapper、Model、BO、Convert、Service 实现。
 - 允许：领域实现依赖其他领域的 `*-api`（Service 接口、Request/Response、枚举、错误码）。
 - 禁止：领域实现依赖其他领域的实现模块（`*-issue`、`*-comment` 等）。
-- 示例：`isiniu-demo-comment` 依赖 `isiniu-demo-issue-api`，通过 `IssueService.getIssue` 校验问题归属；Maven enforcer 禁止它依赖 `isiniu-demo-issue`。
+- 示例：`{artifactId}-comment` 依赖 `{artifactId}-issue-api`，通过 `IssueService.getIssue` 校验问题归属；Maven enforcer 禁止它依赖 `{artifactId}-issue`。
 - 调用第三方系统的代码统一放在 `{base}.client` 包，由 Service 调用，不散落在业务代码里。
 - 两个 Service 互相调用时，把公共逻辑抽到第三个 Service 或 Repository，禁止用 `@Lazy` 绕开循环依赖。
 - 模块化单体里，领域之间的 Java 依赖只能指向对方的 `*-api` 模块。跨领域编排放在 `portal`。

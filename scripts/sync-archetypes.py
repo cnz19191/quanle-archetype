@@ -41,6 +41,13 @@ def velocity_escape(text: str) -> str:
     return text
 
 
+def clean_agents(text: str) -> str:
+    return text.replace(
+        "脚手架仓库中的标杆取值：根包 `com.isiniu.demo`（单模块标杆为 `com.isiniu.single`），作者 `isiniu`，错误码前缀 `ISN`，标杆领域 `auth`（鉴权）、`issue`（问题管理）、`comment`（评论）。",
+        "本项目的实际取值见下方【项目配置】；标杆领域是 `auth`（鉴权）、`issue`（问题管理）、`comment`（评论）。",
+    )
+
+
 def rewrite_business(text: str, package: str) -> str:
     text = text.replace(package, "${package}")
     text = text.replace("@author isiniu", "@author ${author}")
@@ -72,6 +79,7 @@ def copy_docs(src: Path, dest: Path) -> None:
         rel = file.relative_to(src)
         text = rewrite_business(file.read_text(encoding="utf-8"), "com.isiniu.demo")
         text = text.replace("isiniu-demo", "${rootArtifactId}")
+        text = text.replace("isiniu-single-demo", "${rootArtifactId}")
         write(dest / rel, text)
 
 
@@ -158,7 +166,7 @@ def build_modular(out: Path) -> None:
     write(out / "pom.xml", modular_parent_pom())
     write(out / "README.md", (ROOT / "archetype-src" / "modular-README.md").read_text(encoding="utf-8"))
     write(out / "CLAUDE.md", "@AGENTS.md\n", escape=False)
-    write(out / "AGENTS.md", (ROOT / "AGENTS.md").read_text(encoding="utf-8"))
+    write(out / "AGENTS.md", clean_agents((ROOT / "AGENTS.md").read_text(encoding="utf-8")))
     write(out / ".gitignore", (ROOT / "archetype-src" / "gitignore.txt").read_text(encoding="utf-8"))
     write(out / ".github" / "workflows" / "ci.yml", (ROOT / "archetype-src" / "ci.yml").read_text(encoding="utf-8"))
     copy_docs(ROOT / "docs", out / "docs")
@@ -230,7 +238,7 @@ def build_single(out: Path) -> None:
     write(out / "pom.xml", single_pom())
     write(out / "README.md", (ROOT / "archetype-src" / "single-README.md").read_text(encoding="utf-8"))
     write(out / "CLAUDE.md", "@AGENTS.md\n", escape=False)
-    write(out / "AGENTS.md", simplified_agents((ROOT / "AGENTS.md").read_text(encoding="utf-8")))
+    write(out / "AGENTS.md", clean_agents(simplified_agents((ROOT / "AGENTS.md").read_text(encoding="utf-8"))))
     write(out / ".gitignore", (ROOT / "archetype-src" / "gitignore.txt").read_text(encoding="utf-8"))
     write(out / ".github" / "workflows" / "ci.yml", (ROOT / "archetype-src" / "ci.yml").read_text(encoding="utf-8"))
     write(out / "Dockerfile", (source / "Dockerfile").read_text(encoding="utf-8"))
