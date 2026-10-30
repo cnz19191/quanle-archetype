@@ -15,6 +15,19 @@ DIST_URL=$(prop distributionUrl)
 DIST_SHA=$(prop distributionSha256Sum)
 [ -n "$DIST_URL" ] || { echo "distributionUrl 未配置" >&2; exit 1; }
 
+# 可选的项目内本地环境（不提交）. 可设置 LOCAL_MAVEN_HOME / LOCAL_MAVEN_REPO，
+# 优先复用机器上已有的 Maven 和仓库，避免重复下载。
+if [ -f "$ROOT/.mvn/local-env" ]; then
+    . "$ROOT/.mvn/local-env"
+fi
+REPO="${LOCAL_MAVEN_REPO:-$ROOT/.mvn/repository}"
+
+if [ -n "${LOCAL_MAVEN_HOME:-}" ] && [ -x "$LOCAL_MAVEN_HOME/bin/mvn" ]; then
+    mkdir -p "$REPO"
+    unset M2_HOME MAVEN_HOME
+    exec "$LOCAL_MAVEN_HOME/bin/mvn" -Dmaven.repo.local="$REPO" "$@"
+fi
+
 CACHE="${MAVEN_USER_HOME:-$HOME/.m2}/wrapper/dists"
 ARCHIVE=$(basename "$DIST_URL")
 DIST_DIR="$CACHE/$(printf '%s' "$ARCHIVE" | sed 's/[^A-Za-z0-9._-]/_/g')"
@@ -46,7 +59,6 @@ fi
 
 [ -n "$MVN_BIN" ] || { echo "解压后找不到 bin/mvn" >&2; exit 1; }
 
-REPO="$ROOT/.mvn/repository"
 mkdir -p "$REPO"
 unset M2_HOME MAVEN_HOME
 exec "$MVN_BIN" -Dmaven.repo.local="$REPO" "$@"

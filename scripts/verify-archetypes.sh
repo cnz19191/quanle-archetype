@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GEN="${1:-/tmp/isiniu-archetype-out}"
 REPO="$ROOT/.mvn/repository"
+if [ -f "$ROOT/.mvn/local-env" ]; then
+  . "$ROOT/.mvn/local-env"
+fi
+REPO="${LOCAL_MAVEN_REPO:-$REPO}"
 if [ -x "$ROOT/mvnw" ]; then
   MVN="$ROOT/mvnw"
 else

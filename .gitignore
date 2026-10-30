@@ -19,3 +19,6 @@ replay_pid*
 
 # Maven wrapper 的项目内本地仓库
 .mvn/repository/
+
+# 本机 Maven wrapper 配置（含本机路径）
+.mvn/local-env

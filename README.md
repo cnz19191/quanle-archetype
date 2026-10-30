@@ -19,7 +19,7 @@
 
 需要 JDK 21 和 Maven 3.8+。
 
-本仓库自带 `./mvnw`，固定 Maven 3.9.9，并把本地仓库隔离到项目内的 `.mvn/repository`，不读取全局 `M2_HOME` / `mvn`。推荐统一用它：
+本仓库自带 `./mvnw`，优先复用本机已有的项目 Maven 和仓库，不读取全局 `M2_HOME` / `mvn`：
 
 ```bash
 ./mvnw -version
@@ -27,7 +27,14 @@
 ./mvnw -B verify
 ```
 
-首次运行会把 Maven 下载到 `~/.m2/wrapper/dists`，依赖装进 `.mvn/repository`（已加入 `.gitignore`）。用 IDEA 时，在 Maven 设置里选择使用 Maven Wrapper 即可。
+本机路径写在 `.mvn/local-env`（已加入 `.gitignore`，不提交）：
+
+```bash
+LOCAL_MAVEN_HOME=/Users/quanle/workspace/isiniu/isiniu_app/apache-maven-3.9-archetype
+LOCAL_MAVEN_REPO=/Users/quanle/workspace/isiniu/isiniu_app/isiniu-archetype
+```
+
+没有这个文件时，`./mvnw` 会下载 Maven 3.9.9 到 `~/.m2/wrapper/dists`，并把依赖装进项目内的 `.mvn/repository`，方便新环境直接跑。IDEA 可以继续用它自己配置的 Maven，只要 local repository 和这里一致；也可以切到 “Use Maven wrapper”。
 
 测试不连接 MySQL。Service 用 Mockito，数据库用 H2 的 MySQL 模式。生产库仍然是 MySQL 8，表结构由 Flyway 管理，脚本在各模块的 `src/main/resources/db/migration/`，命名规范见 `AGENTS.md` 第 8.4 节。
 
