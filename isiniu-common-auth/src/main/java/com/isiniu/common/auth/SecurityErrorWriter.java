@@ -1,6 +1,5 @@
 package com.isiniu.common.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.isiniu.common.api.CommonResult;
 import com.isiniu.common.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * 安全过滤链里的 401 / 403 响应，保持和 {@link CommonResult} 一致的格式。
@@ -16,10 +16,10 @@ import org.springframework.http.MediaType;
  */
 public class SecurityErrorWriter {
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
-    public SecurityErrorWriter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public SecurityErrorWriter(JsonMapper jsonMapper) {
+        this.jsonMapper = jsonMapper;
     }
 
     /**
@@ -39,6 +39,6 @@ public class SecurityErrorWriter {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        objectMapper.writeValue(response.getWriter(), CommonResult.buildErrorResult(errorCode, message));
+        jsonMapper.writeValue(response.getWriter(), CommonResult.buildErrorResult(errorCode, message));
     }
 }

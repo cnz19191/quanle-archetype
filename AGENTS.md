@@ -45,16 +45,19 @@
 | 类别 | 选型 |
 |---|---|
 | 语言 | Java 21 |
-| 框架 | Spring Boot 3.5.16（import 一律用 `jakarta.*`，禁止 Java EE 的 `javax.*`） |
-| 鉴权 | Spring Security 6.5，LOCAL / SSO 双模式 |
-| 持久层 | MyBatis Plus 3.5 + MyBatis XML |
-| 数据库 | MySQL 8.x，表结构由 Flyway 管理 |
-| 对象转换 | MapStruct |
+| 框架 | Spring Boot 4.1.2（Spring Framework 7.0、Jackson 3；import 一律用 `jakarta.*`，禁止 Java EE 的 `javax.*`） |
+| 鉴权 | Spring Security 7.1，LOCAL / SSO 双模式。LOCAL 用 HS256 JWT，SSO 用 OAuth2 Resource Server 校验 `iss` 和 `aud` |
+| 持久层 | MyBatis Plus 3.5.18（`mybatis-plus-spring-boot4-starter`）+ MyBatis XML |
+| 数据库 | MySQL 8.x，表结构由 Flyway 管理（`spring-boot-starter-flyway`，MySQL 再加 `flyway-mysql`） |
+| 对象转换 | MapStruct 1.6 |
 | 工具类 | Hutool、Spring `CollectionUtils` / `StringUtils` |
-| 接口文档 | SpringDoc（`@Tag`、`@Operation`、`@Schema`） |
-| 测试 | JUnit 5 + Mockito |
+| 接口文档 | SpringDoc 3.2（`@Tag`、`@Operation`、`@Schema`） |
+| 测试 | JUnit 6 + Mockito。Web 测试使用 `spring-boot-starter-webmvc-test` |
+| JSON | Jackson 3。注入 `tools.jackson.databind.json.JsonMapper`，不要注入 Jackson 2 的 `com.fasterxml.jackson.databind.ObjectMapper`。注解仍用 `com.fasterxml.jackson.annotation` |
 
 **新增任何第三方依赖必须经人确认**，并说明理由。
+
+Web 应用用 `spring-boot-starter-webmvc`，切面用 `spring-boot-starter-aspectj`。`application.yml` 保留 `spring.jackson.use-jackson2-defaults=true`，让字段顺序和日期格式与 Boot 3 对齐。
 
 公司级公共能力来自 `com.isiniu:isiniu-common` 这个 jar，不要把 common 的源码复制进业务项目。鉴权（Spring Security、JWT、SSO）单独放在 `com.isiniu:isiniu-common-auth`，只有 auth 领域和启动模块依赖它；`isiniu-common` 不依赖 Spring Security。
 
@@ -377,7 +380,7 @@ bootstrap ──► web ──► kernel ──► isiniu-common
 - [ ] ArchUnit：`controller` 不依赖 `repository`、`mapper`；`service` 不依赖 `mapper`；`mapper` 不依赖 `dto.response`；新代码不依赖 `domain` 包
 - [ ] 模块化单体额外检查：领域内部类型不被其他领域依赖；Maven enforcer 禁止 portal / 其他领域编译期依赖领域实现包
 - [ ] 格式检查（Spotless，Palantir Java Format）
-- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，发现 HIGH 或 CRITICAL 就让构建失败。Spring Boot 3.5.16 是 Maven Central 上最后一个开源 3.x（2026-06-30 EOL），之后的 3.x 修复只在商业版提供。若 Trivy 报出只在商业版有修复的漏洞：在根目录 `.trivyignore` 登记（格式 `CVE-xxxx  # 原因; 到期日 YYYY-MM-DD; 负责人`，到期必须复查），同时推进升级到 Spring Boot 4.x 的 PR。禁止通过降低 severity 或关闭扫描绕过
+- [ ] 依赖漏洞扫描在 CI 中执行。不放进 `mvn verify`：OWASP dependency-check 需要 NVD 密钥且不稳定。当前使用 Trivy，发现 HIGH 或 CRITICAL 就让构建失败。基线是 Spring Boot 4.1.2 开源线。有修复版本的漏洞必须升级依赖。只有确认没有开源修复、或评估后不受影响时，才在根目录 `.trivyignore` 登记（格式 `CVE-xxxx  # 原因; 到期日 YYYY-MM-DD; 负责人`，到期必须复查）。禁止通过降低 severity 或关闭扫描绕过
 - [ ] 至少 1 人 Code Review
 
 ---
