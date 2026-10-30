@@ -4,6 +4,7 @@ import com.isiniu.common.mybatis.MpBaseServiceImpl;
 import com.isiniu.single.auth.mapper.RefreshTokenMapper;
 import com.isiniu.single.auth.model.RefreshTokenModel;
 import com.isiniu.single.auth.repository.RefreshTokenRepository;
+import java.time.LocalDateTime;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -22,5 +23,18 @@ public class RefreshTokenRepositoryImpl extends MpBaseServiceImpl<RefreshTokenMa
             return null;
         }
         return lambdaQuery().eq(RefreshTokenModel::getTokenHash, tokenHash).one();
+    }
+
+    @Override
+    public boolean revokeIfActive(String tokenHash) {
+        if (!StringUtils.hasText(tokenHash)) {
+            return false;
+        }
+        return lambdaUpdate()
+                .set(RefreshTokenModel::getRevoked, RefreshTokenModel.REVOKED)
+                .set(RefreshTokenModel::getUpdateTime, LocalDateTime.now())
+                .eq(RefreshTokenModel::getTokenHash, tokenHash)
+                .eq(RefreshTokenModel::getRevoked, RefreshTokenModel.NOT_REVOKED)
+                .update();
     }
 }

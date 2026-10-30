@@ -35,10 +35,6 @@ import org.springframework.util.StringUtils;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private static final int REVOKED = 1;
-
-    private static final int NOT_REVOKED = 0;
-
     @Resource
     private UserRepository userRepository;
 
@@ -79,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
         requireLocalMode();
         String tokenHash = jwtTokenProvider.hashRefreshToken(request.getRefreshToken());
         RefreshTokenModel record = refreshTokenRepository.getByTokenHash(tokenHash);
-        if (record == null || record.getRevoked() == null || record.getRevoked() == REVOKED) {
+        if (record == null || record.getRevoked() == null || record.getRevoked() == RefreshTokenModel.REVOKED) {
             log.warn("[刷新令牌失败] reason=invalid");
             throw new CustomException(ErrorCodeEnum.AUTH_REFRESH_INVALID, "refreshToken 无效");
         }
@@ -94,8 +90,10 @@ public class AuthServiceImpl implements AuthService {
         if (user.getStatus() == null || user.getStatus() != UserModel.STATUS_ENABLED) {
             throw new CustomException(ErrorCodeEnum.AUTH_USER_DISABLED, "userId=" + record.getUserId());
         }
-        record.setRevoked(REVOKED);
-        refreshTokenRepository.updateById(record);
+        if (!refreshTokenRepository.revokeIfActive(tokenHash)) {
+            log.warn("[刷新令牌失败] reason=concurrentReuse, userId={}", record.getUserId());
+            throw new CustomException(ErrorCodeEnum.AUTH_REFRESH_INVALID, "refreshToken 无效");
+        }
         log.info("[刷新令牌] userId={}", user.getId());
         return issueTokens(user);
     }
@@ -106,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
         requireLocalMode();
         RefreshTokenModel record =
                 refreshTokenRepository.getByTokenHash(jwtTokenProvider.hashRefreshToken(refreshToken));
-        if (record == null || record.getRevoked() == null || record.getRevoked() == REVOKED) {
+        if (record == null || record.getRevoked() == null || record.getRevoked() == RefreshTokenModel.REVOKED) {
             return;
         }
         Long currentUserId = LoginUserHolder.getUserId();
@@ -114,8 +112,7 @@ public class AuthServiceImpl implements AuthService {
             log.warn("[登出忽略] reason=tokenNotOwned, userId={}", currentUserId);
             return;
         }
-        record.setRevoked(REVOKED);
-        refreshTokenRepository.updateById(record);
+        refreshTokenRepository.revokeIfActive(record.getTokenHash());
         log.info("[登出] userId={}", record.getUserId());
     }
 
@@ -146,7 +143,7 @@ public class AuthServiceImpl implements AuthService {
         record.setUserId(user.getId());
         record.setTokenHash(jwtTokenProvider.hashRefreshToken(refreshToken));
         record.setExpiresAt(LocalDateTime.now().plus(authProperties.getRefreshTokenTtl()));
-        record.setRevoked(NOT_REVOKED);
+        record.setRevoked(RefreshTokenModel.NOT_REVOKED);
         refreshTokenRepository.save(record);
         TokenResponse response = new TokenResponse();
         response.setAccessToken(accessToken);

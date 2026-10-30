@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -118,6 +119,7 @@ class AuthServiceImplTest {
         when(jwtTokenProvider.hashRefreshToken("refresh")).thenReturn("refresh-hash");
         when(refreshTokenRepository.getByTokenHash("refresh-hash")).thenReturn(record);
         when(userRepository.getById(7L)).thenReturn(user);
+        when(refreshTokenRepository.revokeIfActive("refresh-hash")).thenReturn(true);
         when(jwtTokenProvider.createAccessToken(any())).thenReturn("new-access");
         when(jwtTokenProvider.newRefreshToken()).thenReturn("new-refresh");
         when(jwtTokenProvider.hashRefreshToken("new-refresh")).thenReturn("new-hash");
@@ -126,9 +128,27 @@ class AuthServiceImplTest {
         TokenResponse response = authService.refresh(refreshRequest("refresh"));
 
         assertEquals("new-access", response.getAccessToken());
-        assertEquals(1, record.getRevoked());
-        verify(refreshTokenRepository).updateById(record);
+        verify(refreshTokenRepository).revokeIfActive("refresh-hash");
         verify(refreshTokenRepository).save(any(RefreshTokenModel.class));
+    }
+
+    @Test
+    void refreshRejectsTokenRevokedConcurrently() {
+        RefreshTokenModel record = new RefreshTokenModel();
+        record.setId(1L);
+        record.setUserId(7L);
+        record.setRevoked(0);
+        record.setExpiresAt(LocalDateTime.now().plusDays(1));
+        when(jwtTokenProvider.hashRefreshToken("refresh")).thenReturn("refresh-hash");
+        when(refreshTokenRepository.getByTokenHash("refresh-hash")).thenReturn(record);
+        when(userRepository.getById(7L)).thenReturn(enabledUser());
+        when(refreshTokenRepository.revokeIfActive("refresh-hash")).thenReturn(false);
+
+        CustomException ex = assertThrows(CustomException.class, () -> authService.refresh(refreshRequest("refresh")));
+
+        assertEquals(
+                ErrorCodeEnum.AUTH_REFRESH_INVALID.getCode(), ex.getErrorCode().getCode());
+        verify(refreshTokenRepository, never()).save(any(RefreshTokenModel.class));
     }
 
     private UserModel enabledUser() {

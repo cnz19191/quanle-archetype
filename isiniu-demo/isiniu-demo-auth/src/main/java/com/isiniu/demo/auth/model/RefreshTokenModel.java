@@ -23,6 +23,12 @@ public class RefreshTokenModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 已吊销。 */
+    public static final int REVOKED = 1;
+
+    /** 未吊销。 */
+    public static final int NOT_REVOKED = 0;
+
     @TableId(type = IdType.AUTO)
     private Long id;
 
