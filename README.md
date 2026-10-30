@@ -30,8 +30,8 @@
 本机路径写在 `.mvn/local-env`（已加入 `.gitignore`，不提交）：
 
 ```bash
-LOCAL_MAVEN_HOME=/Users/quanle/workspace/isiniu/isiniu_app/apache-maven-3.9-archetype
-LOCAL_MAVEN_REPO=/Users/quanle/workspace/isiniu/isiniu_app/isiniu-archetype
+LOCAL_MAVEN_HOME=/path/to/apache-maven-3.9
+LOCAL_MAVEN_REPO=/path/to/maven-repository
 ```
 
 没有这个文件时，`./mvnw` 会下载 Maven 3.9.9 到 `~/.m2/wrapper/dists`，并把依赖装进项目内的 `.mvn/repository`，方便新环境直接跑。IDEA 可以继续用它自己配置的 Maven，只要 local repository 和这里一致；也可以切到 “Use Maven wrapper”。
@@ -167,4 +167,10 @@ Archetype 资源由脚本从两个标杆生成，不手改 `archetype-resources`
 python3 scripts/sync-archetypes.py
 ```
 
-`./mvnw verify` 和 `./mvnw install` 也会在打包 archetype 前自动跑这个脚本。
+`./mvnw verify` 和 `./mvnw install` 也会在打包 archetype 前自动跑这个脚本，但**不会**生成并构建示例项目。改完标杆后，在 `./mvnw -B clean install` 之后单独执行：
+
+```bash
+bash scripts/verify-archetypes.sh
+```
+
+它用两个 archetype 各生成一个项目到 `/tmp/isiniu-archetype-out` 并执行 `verify`，CI 中也会运行。
