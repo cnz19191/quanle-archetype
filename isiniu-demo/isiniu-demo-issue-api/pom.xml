@@ -59,6 +59,8 @@
                                         <exclude>com.isiniu:isiniu-demo-portal</exclude>
                                         <exclude>com.isiniu:isiniu-demo-bootstrap</exclude>
                                         <exclude>com.isiniu:isiniu-demo-issue</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-auth</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-comment</exclude>
                                     </excludes>
                                 </bannedDependencies>
                             </rules>

@@ -65,6 +65,8 @@
                                 <bannedDependencies>
                                     <excludes>
                                         <exclude>com.isiniu:isiniu-demo-issue</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-comment</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-auth</exclude>
                                         <exclude>com.isiniu:isiniu-demo-web</exclude>
                                         <exclude>com.isiniu:isiniu-demo-bootstrap</exclude>
                                     </excludes>

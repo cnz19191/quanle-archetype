@@ -12,7 +12,7 @@
 
     <artifactId>isiniu-demo-web</artifactId>
     <name>isiniu-demo-web</name>
-    <description>Web 公共配置：登录拦截器注册、跨域、异步线程池、健康检查。</description>
+    <description>Web 公共配置：异步线程池、健康检查。鉴权和跨域由 isiniu-common 自动配置提供。</description>
 
     <dependencies>
         <dependency>
@@ -52,8 +52,12 @@
                                     <excludes>
                                         <exclude>com.isiniu:isiniu-demo-portal</exclude>
                                         <exclude>com.isiniu:isiniu-demo-bootstrap</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-auth</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-auth-api</exclude>
                                         <exclude>com.isiniu:isiniu-demo-issue</exclude>
                                         <exclude>com.isiniu:isiniu-demo-issue-api</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-comment</exclude>
+                                        <exclude>com.isiniu:isiniu-demo-comment-api</exclude>
                                     </excludes>
                                 </bannedDependencies>
                             </rules>

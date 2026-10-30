@@ -37,4 +37,12 @@ public interface IssueService {
      * @return 变更后的问题
      */
     IssueResponse changeStatus(Long id, IssueStatusChangeRequest request);
+
+    /**
+     * 查询当前登录人的问题。其他领域校验问题归属时调用本方法。
+     *
+     * @param id 问题 ID
+     * @return 问题
+     */
+    IssueResponse getIssue(Long id);
 }
