@@ -29,7 +29,7 @@ jobs:
       - name: install
         run: mvn -B install -DskipTests
       - name: generate both archetypes and verify
-        run: bash scripts/verify-archetypes.sh
+        run: LOCAL_MAVEN_REPO="$HOME/.m2/repository" bash scripts/verify-archetypes.sh
 
   trivy:
     runs-on: ubuntu-latest
