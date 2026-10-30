@@ -14,8 +14,7 @@ import org.springframework.util.StringUtils;
  * @author isiniu
  */
 @Repository
-public class CommentRepositoryImpl extends MpBaseServiceImpl<CommentMapper, CommentModel>
-        implements CommentRepository {
+public class CommentRepositoryImpl extends MpBaseServiceImpl<CommentMapper, CommentModel> implements CommentRepository {
 
     @Override
     public CommentModel getByBizNo(Long issueId, String bizNo) {

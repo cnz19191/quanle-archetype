@@ -64,11 +64,13 @@ public class CommentServiceImpl implements CommentService {
                 .toList();
     }
 
-    private CommentResponse reuseOrReject(
-            CommentCreateRequest request, CommentModel existing, Long authorId) {
+    private CommentResponse reuseOrReject(CommentCreateRequest request, CommentModel existing, Long authorId) {
         if (!authorId.equals(existing.getAuthorId()) || !existing.getContent().equals(request.getContent())) {
-            log.warn("[创建评论幂等冲突] issueId={}, commentId={}, authorId={}",
-                    existing.getIssueId(), existing.getId(), authorId);
+            log.warn(
+                    "[创建评论幂等冲突] issueId={}, commentId={}, authorId={}",
+                    existing.getIssueId(),
+                    existing.getId(),
+                    authorId);
             throw new CustomException(ErrorCodeEnum.COMMENT_DUPLICATE, "bizNo=" + request.getBizNo());
         }
         return CommentConvert.INSTANCE.toResponse(existing);

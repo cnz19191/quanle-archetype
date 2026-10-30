@@ -87,10 +87,11 @@ class AuthServiceImplTest {
         when(userRepository.getByUsername("tester")).thenReturn(user);
         when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
 
-        CustomException ex = assertThrows(
-                CustomException.class, () -> authService.login(loginRequest("tester", "wrong")));
+        CustomException ex =
+                assertThrows(CustomException.class, () -> authService.login(loginRequest("tester", "wrong")));
 
-        assertEquals(ErrorCodeEnum.AUTH_BAD_CREDENTIALS.getCode(), ex.getErrorCode().getCode());
+        assertEquals(
+                ErrorCodeEnum.AUTH_BAD_CREDENTIALS.getCode(), ex.getErrorCode().getCode());
     }
 
     @Test
@@ -102,7 +103,8 @@ class AuthServiceImplTest {
 
         CustomException ex = assertThrows(CustomException.class, () -> authService.refresh(refreshRequest("refresh")));
 
-        assertEquals(ErrorCodeEnum.AUTH_REFRESH_INVALID.getCode(), ex.getErrorCode().getCode());
+        assertEquals(
+                ErrorCodeEnum.AUTH_REFRESH_INVALID.getCode(), ex.getErrorCode().getCode());
     }
 
     @Test

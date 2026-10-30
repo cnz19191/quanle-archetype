@@ -104,8 +104,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(rollbackFor = Exception.class)
     public void logout(String refreshToken) {
         requireLocalMode();
-        RefreshTokenModel record = refreshTokenRepository.getByTokenHash(
-                jwtTokenProvider.hashRefreshToken(refreshToken));
+        RefreshTokenModel record =
+                refreshTokenRepository.getByTokenHash(jwtTokenProvider.hashRefreshToken(refreshToken));
         if (record == null || record.getRevoked() == null || record.getRevoked() == REVOKED) {
             return;
         }

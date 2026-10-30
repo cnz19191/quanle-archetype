@@ -67,10 +67,11 @@ class CommentServiceImplTest {
         existing.setContent("原内容");
         when(commentRepository.getByBizNo(1L, "CMT-1")).thenReturn(existing);
 
-        CustomException ex = assertThrows(
-                CustomException.class, () -> commentService.createComment(1L, request("新内容", "CMT-1")));
+        CustomException ex =
+                assertThrows(CustomException.class, () -> commentService.createComment(1L, request("新内容", "CMT-1")));
 
-        assertEquals(ErrorCodeEnum.COMMENT_DUPLICATE.getCode(), ex.getErrorCode().getCode());
+        assertEquals(
+                ErrorCodeEnum.COMMENT_DUPLICATE.getCode(), ex.getErrorCode().getCode());
     }
 
     private CommentCreateRequest request(String content, String bizNo) {

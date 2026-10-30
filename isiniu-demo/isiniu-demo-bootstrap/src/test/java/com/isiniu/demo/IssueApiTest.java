@@ -122,8 +122,7 @@ class IssueApiTest {
                 .andExpect(jsonPath("$.data.issueId").value(id))
                 .andExpect(jsonPath("$.data.authorId").value("7"));
 
-        mockMvc.perform(get("/api/issues/" + id + "/comments")
-                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+        mockMvc.perform(get("/api/issues/" + id + "/comments").header(HttpHeaders.AUTHORIZATION, bearer(token)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].content").value("已处理"));
@@ -161,8 +160,7 @@ class IssueApiTest {
                         .content(loginJson("tester", PASSWORD)))
                 .andExpect(status().isOk())
                 .andReturn();
-        String refreshToken =
-                JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.refreshToken");
+        String refreshToken = JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.refreshToken");
 
         MvcResult refreshResult = mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -171,8 +169,7 @@ class IssueApiTest {
                 .andExpect(jsonPath("$.code").value("0"))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
                 .andReturn();
-        String newAccessToken =
-                JsonPath.read(refreshResult.getResponse().getContentAsString(), "$.data.accessToken");
+        String newAccessToken = JsonPath.read(refreshResult.getResponse().getContentAsString(), "$.data.accessToken");
 
         mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, bearer(newAccessToken)))
                 .andExpect(status().isOk())
@@ -192,10 +189,8 @@ class IssueApiTest {
                         .content(loginJson("tester", PASSWORD)))
                 .andExpect(status().isOk())
                 .andReturn();
-        String accessToken =
-                JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.accessToken");
-        String refreshToken =
-                JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.refreshToken");
+        String accessToken = JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.accessToken");
+        String refreshToken = JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.refreshToken");
 
         mockMvc.perform(post("/api/auth/logout")
                         .header(HttpHeaders.AUTHORIZATION, bearer(accessToken))
