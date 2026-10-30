@@ -35,6 +35,9 @@ import org.springframework.util.StringUtils;
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    /** 随机口令的 BCrypt 哈希（cost 与 BCryptPasswordEncoder 默认值一致），只用于拉平登录耗时，任何输入都不会匹配。 */
+    static final String DUMMY_BCRYPT_HASH = "$2a$10$IHwkeEka/YEDOAv/fF8IquZ6soaUvJVLhWB9Y9YlCy.FvdT5dPEgW";
+
     @Resource
     private UserRepository userRepository;
 
@@ -55,9 +58,11 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse login(LoginRequest request) {
         requireLocalMode();
         UserModel user = userRepository.getByUsername(request.getUsername());
-        if (user == null
-                || !StringUtils.hasText(user.getPasswordHash())
-                || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        boolean hasPassword = user != null && StringUtils.hasText(user.getPasswordHash());
+        // 用户不存在或无本地密码时也跑一次 BCrypt，避免通过响应时间枚举用户名
+        boolean matched = passwordEncoder.matches(
+                request.getPassword(), hasPassword ? user.getPasswordHash() : DUMMY_BCRYPT_HASH);
+        if (!hasPassword || !matched) {
             log.warn("[登录失败] username={}", request.getUsername());
             throw new CustomException(ErrorCodeEnum.AUTH_BAD_CREDENTIALS, "username=" + request.getUsername());
         }
