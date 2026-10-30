@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
           cache: maven
       - name: verify
         run: mvn -B verify
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
           cache: maven
       - name: install
         run: mvn -B install -DskipTests
