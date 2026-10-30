@@ -120,7 +120,7 @@ export AUTH_JWT_SECRET='至少32字节的本地密钥，生产从配置中心读
 ./mvnw -pl isiniu-demo-bootstrap -am spring-boot:run
 ```
 
-启动时 Flyway 自动建表。本地验证可以插一个测试账号（密码是 `password`，**只在本地用**）：
+启动时 Flyway 自动建表。本地验证可以插一个测试账号（密码是 `password`，**只在本地用**）。客户端连接请显式使用 `utf8mb4`（例如 `mysql --default-character-set=utf8mb4 ...`），否则中文会乱码：
 
 ```sql
 INSERT INTO sys_user (username, password_hash, display_name, status, create_time, update_time, deleted)
