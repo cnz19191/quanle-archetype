@@ -6,7 +6,7 @@
 
 | 模块 | 作用 |
 |---|---|
-| `isiniu-parent` | 父 POM，统一 Java 25、Spring Boot 3.5.16、MyBatis Plus 3.5.18.1、Spring Security、Flyway、Spotless |
+| `isiniu-parent` | 父 POM，统一 Java 25、Spring Boot 4.1.2、MyBatis Plus 3.5.18.1、Spring Security 7.1、Flyway 12、Spotless |
 | `isiniu-common` | 统一返回、分页、异常、traceId、操作日志、`LoginUserHolder`、跨域、MyBatis 填充、逻辑删除配置；不依赖 Spring Security |
 | `isiniu-common-auth` | 鉴权：Spring Security 自动配置、LOCAL JWT、SSO 资源服务器，只由 auth 领域和启动模块依赖 |
 | `isiniu-demo` | 模块化单体标杆：kernel、web、auth-api、auth、issue-api、issue、comment-api、comment、portal、bootstrap |
@@ -16,9 +16,36 @@
 
 `isiniu-demo` 的依赖方向：领域实现只依赖 kernel、本领域 api，以及**其他领域的 api**（`comment` 依赖 `issue-api` 就是示例）；portal 只依赖 api，编译期看不到 Repository / Mapper / Model；bootstrap 用 runtime 把实现组装进来。Maven enforcer 卡住跨领域实现依赖，ArchUnit 检查分层。
 
+## 升级到 Spring Boot 4.1
+
+基线从 Spring Boot 3.5.16 升到 **4.1.2**（Spring Framework 7.0.10、Spring Security 7.1.2、Jackson 3.1.7）。只用正式 GA，没有 milestone 或 RC。
+
+| 依赖 | 现在 |
+|---|---|
+| JDK | 25 |
+| Spring Boot | 4.1.2 |
+| MyBatis-Plus | 3.5.18.1，改用 `mybatis-plus-spring-boot4-starter` |
+| SpringDoc | 3.2.0（`springdoc-openapi-starter-webmvc-ui`） |
+| MapStruct | 1.6.3（1.7 只有 Beta，继续用 1.6 的 GA） |
+| Flyway | 12.4.0，由 `spring-boot-starter-flyway` 管理；MySQL 仍加 `flyway-mysql` |
+| ArchUnit | 1.5.1（JUnit 6） |
+| Lombok | 1.18.48（已支持 JDK 25） |
+| Palantir Java Format | 2.71.0（2.50.0 在 JDK 25 上会调用已删除的 javac API） |
+| Nimbus JOSE JWT | 10.9.1，由 Spring Security 7.1.2 带入。业务代码不直接依赖 JJWT |
+
+Starter 按 Boot 4 迁移指南拆开：`spring-boot-starter-web` 改为 `spring-boot-starter-webmvc`，`spring-boot-starter-aop` 改为 `spring-boot-starter-aspectj`，`spring-boot-starter-oauth2-resource-server` 改为 `spring-boot-starter-security-oauth2-resource-server`。MockMvc 测试额外依赖 `spring-boot-starter-webmvc-test`。
+
+开发时注意：
+
+- JSON 走 Jackson 3。需要注入映射器时用 `tools.jackson.databind.json.JsonMapper`，不要再用 `com.fasterxml.jackson.databind.ObjectMapper`。`com.fasterxml.jackson.annotation` 里的注解不用改。
+- `application.yml` 打开了 `spring.jackson.use-jackson2-defaults=true`，字段顺序和日期格式与 Boot 3 对齐，避免已有接口的 JSON 形态变化。
+- 默认的 `SecurityFilterChain` 改由 `ServletWebSecurityAutoConfiguration` 提供。自有安全自动配置要排在它前面，否则 Boot 的默认链会抢先注册。
+- 默认内存用户自动配置的类名是 `org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration`。启动模块只在运行期依赖 security，排除时用 `excludeName`。
+- 安全行为没有放宽：refresh token 仍然只能用一次，SSO 仍然校验 `iss` 和 `aud`，停用用户不能登录，未知用户名仍会做一次 dummy BCrypt，JWT 过滤器不会被 Servlet 容器再注册一次。
+
 ## 本地构建
 
-需要 JDK 25 和 Maven 3.8+。Spring Boot 3.5.16 支持到 Java 25。为了在 JDK 25 上编译和检查格式：Lombok 使用 1.18.46（与 Boot 3.5.16 BOM 一致；1.18.38 在 JDK 25 上会让 javac 失败），ArchUnit 使用 1.4.2（1.4.0 读不了 Java 25 的 class 文件），Palantir Java Format 使用 2.71.0（2.50.0 在 JDK 25 上调用已删除的 javac API）。
+需要 JDK 25 和 Maven 3.8+。
 
 本仓库自带 `./mvnw`，优先复用本机已有的项目 Maven 和仓库，不读取全局 `M2_HOME` / `mvn`：
 
