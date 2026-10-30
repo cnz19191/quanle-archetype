@@ -1,6 +1,6 @@
 # ${rootArtifactId}
 
-模块化单体。公共能力来自 `com.quanle:quanle-common`，不要复制它的源码。
+模块化单体。公共能力来自 `com.isiniu:isiniu-common`，不要复制它的源码。
 
 ## 模块
 
@@ -15,7 +15,7 @@
 
 ## 本地运行
 
-先在公司脚手架仓库执行 `mvn install`，保证父 POM 和 `quanle-common` 在本地仓库。然后：
+先在公司脚手架仓库执行 `mvn install`，保证父 POM 和 `isiniu-common` 在本地仓库。然后：
 
 ```bash
 mvn verify

@@ -13,7 +13,7 @@
 - 主力模板是模块化单体：kernel、web、领域 api、领域实现、portal、bootstrap。
 - 领域实现之间不能互相依赖。跨领域只依赖对方的 api 模块，或者在 portal 聚合。
 - 小工具使用单模块模板，分层规则相同。
-- 两个模板都依赖 `quanle-common` jar。
+- 两个模板都依赖 `isiniu-common` jar。
 
 ## 后果
 

@@ -1,6 +1,6 @@
 target/
-quanle-archetype-modular/src/main/resources/archetype-resources/
-quanle-archetype-single/src/main/resources/archetype-resources/
+isiniu-archetype-modular/src/main/resources/archetype-resources/
+isiniu-archetype-single/src/main/resources/archetype-resources/
 !.mvn/wrapper/maven-wrapper.jar
 
 .idea/

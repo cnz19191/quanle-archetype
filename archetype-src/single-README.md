@@ -1,6 +1,6 @@
 # ${rootArtifactId}
 
-单模块服务。适合小工具和内部服务。分层和问题管理示例与公司标杆一致，公共能力来自 `com.quanle:quanle-common`。
+单模块服务。适合小工具和内部服务。分层和问题管理示例与公司标杆一致，公共能力来自 `com.isiniu:isiniu-common`。
 
 ## 本地运行
 

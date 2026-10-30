@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-GEN="${1:-/tmp/quanle-archetype-out}"
+GEN="${1:-/tmp/isiniu-archetype-out}"
 rm -rf "$GEN"
 mkdir -p "$GEN"
 
@@ -18,8 +18,8 @@ generate() {
     -Dpackage="$pkg" \
     -Dauthor=ci \
     -DerrorCodePrefix="$prefix" \
-    -DquanleParentVersion=1.0.0-SNAPSHOT \
-    -DarchetypeGroupId=com.quanle \
+    -DisiniuParentVersion=1.0.0-SNAPSHOT \
+    -DarchetypeGroupId=com.isiniu \
     -DarchetypeArtifactId="$archetype" \
     -DarchetypeVersion=1.0.0-SNAPSHOT \
     -DoutputDirectory="$GEN" \
@@ -35,6 +35,6 @@ generate() {
   (cd "$GEN/$artifact" && mvn -B verify)
 }
 
-generate quanle-archetype-modular sample-modular com.example.modular MDL
-generate quanle-archetype-single sample-single com.example.single SGL
+generate isiniu-archetype-modular sample-modular com.example.modular MDL
+generate isiniu-archetype-single sample-single com.example.single SGL
 echo "archetype projects verified in $GEN"

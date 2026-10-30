@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PROPS = [
     "packageInPathFormat",
-    "quanleParentVersion",
+    "isiniuParentVersion",
     "errorCodePrefix",
     "rootArtifactId",
     "artifactId",
@@ -43,8 +43,8 @@ def velocity_escape(text: str) -> str:
 
 def rewrite_business(text: str, package: str) -> str:
     text = text.replace(package, "${package}")
-    text = text.replace("@author quanle", "@author ${author}")
-    text = re.sub(r"QLE(\d{4})", r"${errorCodePrefix}\1", text)
+    text = text.replace("@author isiniu", "@author ${author}")
+    text = re.sub(r"ISN(\d{4})", r"${errorCodePrefix}\1", text)
     return text
 
 
@@ -70,8 +70,8 @@ def copy_docs(src: Path, dest: Path) -> None:
         if not file.is_file():
             continue
         rel = file.relative_to(src)
-        text = rewrite_business(file.read_text(encoding="utf-8"), "com.quanle.demo")
-        text = text.replace("quanle-demo", "${rootArtifactId}")
+        text = rewrite_business(file.read_text(encoding="utf-8"), "com.isiniu.demo")
+        text = text.replace("isiniu-demo", "${rootArtifactId}")
         write(dest / rel, text)
 
 
@@ -83,9 +83,9 @@ def modular_parent_pom() -> str:
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.quanle</groupId>
-        <artifactId>quanle-parent</artifactId>
-        <version>${quanleParentVersion}</version>
+        <groupId>com.isiniu</groupId>
+        <artifactId>isiniu-parent</artifactId>
+        <version>${isiniuParentVersion}</version>
         <relativePath/>
     </parent>
 
@@ -111,8 +111,8 @@ def modular_parent_pom() -> str:
 def transform_child_pom(text: str) -> str:
     text = text.replace(
         """    <parent>
-        <groupId>com.quanle</groupId>
-        <artifactId>quanle-demo</artifactId>
+        <groupId>com.isiniu</groupId>
+        <artifactId>isiniu-demo</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>""",
         """    <parent>
@@ -121,12 +121,12 @@ def transform_child_pom(text: str) -> str:
         <version>${version}</version>
     </parent>""",
     )
-    text = text.replace("quanle-demo", "${rootArtifactId}")
+    text = text.replace("isiniu-demo", "${rootArtifactId}")
     text = text.replace(
-        "<groupId>com.quanle</groupId>\n            <artifactId>${rootArtifactId}",
+        "<groupId>com.isiniu</groupId>\n            <artifactId>${rootArtifactId}",
         "<groupId>${groupId}</groupId>\n            <artifactId>${rootArtifactId}",
     )
-    text = text.replace("com.quanle:${rootArtifactId}", "${groupId}:${rootArtifactId}")
+    text = text.replace("com.isiniu:${rootArtifactId}", "${groupId}:${rootArtifactId}")
     return text
 
 
@@ -141,16 +141,16 @@ def copy_module_sources(module_dir: Path, out_module: Path) -> None:
             if not rel.startswith("docs/"):
                 continue
         text = file.read_text(encoding="utf-8")
-        text = rewrite_business(text, "com.quanle.demo")
-        text = text.replace("quanle_demo", "app")
-        text = text.replace("quanle-demo", "${rootArtifactId}")
-        path = rel.replace("com/quanle/demo", "__packageInPathFormat__")
+        text = rewrite_business(text, "com.isiniu.demo")
+        text = text.replace("isiniu_demo", "app")
+        text = text.replace("isiniu-demo", "${rootArtifactId}")
+        path = rel.replace("com/isiniu/demo", "__packageInPathFormat__")
         write(out_module / path, text)
 
 
 def build_modular(out: Path) -> None:
     reset(out)
-    demo = ROOT / "quanle-demo"
+    demo = ROOT / "isiniu-demo"
     write(out / "pom.xml", modular_parent_pom())
     write(out / "README.md", (ROOT / "archetype-src" / "modular-README.md").read_text(encoding="utf-8"))
     write(out / "CLAUDE.md", "@AGENTS.md\n", escape=False)
@@ -159,20 +159,20 @@ def build_modular(out: Path) -> None:
     write(out / ".github" / "workflows" / "ci.yml", (ROOT / "archetype-src" / "ci.yml").read_text(encoding="utf-8"))
     copy_docs(ROOT / "docs", out / "docs")
     copy_docs(demo / "docs", out / "docs")
-    for module in sorted(path for path in demo.iterdir() if path.is_dir() and path.name.startswith("quanle-demo-")):
-        name = module.name.replace("quanle-demo", "__rootArtifactId__")
+    for module in sorted(path for path in demo.iterdir() if path.is_dir() and path.name.startswith("isiniu-demo-")):
+        name = module.name.replace("isiniu-demo", "__rootArtifactId__")
         dest = out / name
         copy_module_sources(module, dest)
         write(dest / "pom.xml", transform_child_pom((module / "pom.xml").read_text(encoding="utf-8")))
         agents = module / "AGENTS.md"
         if agents.exists():
-            text = rewrite_business(agents.read_text(encoding="utf-8"), "com.quanle.demo")
-            text = text.replace("quanle-demo", "${rootArtifactId}")
+            text = rewrite_business(agents.read_text(encoding="utf-8"), "com.isiniu.demo")
+            text = text.replace("isiniu-demo", "${rootArtifactId}")
             write(dest / "AGENTS.md", text)
 
 
 def single_pom() -> str:
-    source = (ROOT / "quanle-single-demo" / "pom.xml").read_text(encoding="utf-8")
+    source = (ROOT / "isiniu-single-demo" / "pom.xml").read_text(encoding="utf-8")
     deps = source.split("<dependencies>", 1)[1].split("</dependencies>", 1)[0]
     build = source.split("<build>", 1)[1].split("</build>", 1)[0]
     return f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -182,9 +182,9 @@ def single_pom() -> str:
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.quanle</groupId>
-        <artifactId>quanle-parent</artifactId>
-        <version>${{quanleParentVersion}}</version>
+        <groupId>com.isiniu</groupId>
+        <artifactId>isiniu-parent</artifactId>
+        <version>${{isiniuParentVersion}}</version>
         <relativePath/>
     </parent>
 
@@ -208,7 +208,7 @@ def simplified_agents(full: str) -> str:
 
 本项目是一个 Maven 模块，适合小工具和内部服务。包结构按第 3.3 节，全部放在 `{base}` 下。
 
-- 公共能力依赖 `quanle-common`，不要复制它的源码
+- 公共能力依赖 `isiniu-common`，不要复制它的源码
 - 登录拦截器注册、跨域、异步线程池放在 `config`
 - 分层约束由 ArchUnit 检查：controller 不依赖 repository/mapper，service 不依赖 mapper，mapper 不依赖 dto.response
 - 出现第二个业务领域、需要隔离 Mapper 和 Model 时，改用模块化单体模板
@@ -222,7 +222,7 @@ def simplified_agents(full: str) -> str:
 
 def build_single(out: Path) -> None:
     reset(out)
-    source = ROOT / "quanle-single-demo"
+    source = ROOT / "isiniu-single-demo"
     write(out / "pom.xml", single_pom())
     write(out / "README.md", (ROOT / "archetype-src" / "single-README.md").read_text(encoding="utf-8"))
     write(out / "CLAUDE.md", "@AGENTS.md\n", escape=False)
@@ -236,16 +236,16 @@ def build_single(out: Path) -> None:
         if not file.is_file():
             continue
         rel = file.relative_to(source).as_posix()
-        text = rewrite_business(file.read_text(encoding="utf-8"), "com.quanle.single")
-        text = text.replace("quanle-single-demo", "${rootArtifactId}")
-        text = text.replace("quanle_single", "app")
-        path = rel.replace("com/quanle/single", "__packageInPathFormat__")
+        text = rewrite_business(file.read_text(encoding="utf-8"), "com.isiniu.single")
+        text = text.replace("isiniu-single-demo", "${rootArtifactId}")
+        text = text.replace("isiniu_single", "app")
+        path = rel.replace("com/isiniu/single", "__packageInPathFormat__")
         write(out / path, text)
 
 
 def main() -> None:
-    build_modular(ROOT / "quanle-archetype-modular" / "src" / "main" / "resources" / "archetype-resources")
-    build_single(ROOT / "quanle-archetype-single" / "src" / "main" / "resources" / "archetype-resources")
+    build_modular(ROOT / "isiniu-archetype-modular" / "src" / "main" / "resources" / "archetype-resources")
+    build_single(ROOT / "isiniu-archetype-single" / "src" / "main" / "resources" / "archetype-resources")
 
 
 if __name__ == "__main__":

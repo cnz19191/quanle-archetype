@@ -6,7 +6,7 @@
 > - 标注【项目配置】的内容每个项目需按实际填写。Archetype 生成时会替换占位符。
 > - 子模块可以有自己的简短 `AGENTS.md`，只说明该模块边界；与本文件冲突时以本文件为准。
 
-脚手架仓库中的标杆取值：根包 `com.quanle.demo`（单模块标杆为 `com.quanle.single`），作者 `quanle`，错误码前缀 `QLE`，标杆领域 `issue`（问题管理）。
+脚手架仓库中的标杆取值：根包 `com.isiniu.demo`（单模块标杆为 `com.isiniu.single`），作者 `isiniu`，错误码前缀 `ISN`，标杆领域 `issue`（问题管理）。
 
 ---
 
@@ -55,7 +55,7 @@
 
 **新增任何第三方依赖必须经人确认**，并说明理由。
 
-公司级公共能力来自 `com.quanle:quanle-common` 这个 jar，不要把 common 的源码复制进业务项目。
+公司级公共能力来自 `com.isiniu:isiniu-common` 这个 jar，不要把 common 的源码复制进业务项目。
 
 ---
 
@@ -115,7 +115,7 @@ src/main/resources/mapper/
 默认业务项目是多模块 Maven 工程，按业务领域拆，而不是按 Controller/Service/DAO 横着拆。依赖方向：
 
 ```
-bootstrap ──► web ──► kernel ──► quanle-common
+bootstrap ──► web ──► kernel ──► isiniu-common
      │          ▲
      ├──► portal ┘
      │       │
@@ -126,7 +126,7 @@ bootstrap ──► web ──► kernel ──► quanle-common
 
 | 模块 | 放什么 | 可以依赖 | 禁止 |
 |---|---|---|---|
-| `{artifactId}-kernel` | 项目级约定，当前是错误码号段 | `quanle-common` | web、portal、bootstrap、任何领域 |
+| `{artifactId}-kernel` | 项目级约定，当前是错误码号段 | `isiniu-common` | web、portal、bootstrap、任何领域 |
 | `{artifactId}-web` | 登录拦截器注册、跨域、异步线程池、健康检查 | kernel | 领域模块。全局异常、traceId、操作日志用 common，不要再写一份 |
 | `{artifactId}-{领域}-api` | 公开 Service 接口、Request、Response、枚举、ErrorCodeEnum | kernel | 实现模块、web、portal |
 | `{artifactId}-{领域}` | Controller、Service 实现、Repository、Mapper、Model、BO、Convert、XML | kernel、本领域 api | web、portal、其他领域的实现模块 |
@@ -184,7 +184,7 @@ bootstrap ──► web ──► kernel ──► quanle-common
 | 依赖注入 | `@Resource`（禁止 `@Autowired`） |
 | 实体 | `@Data` + `@TableName` + `@TableId(type = IdType.AUTO)`，实现 `Serializable` |
 | DTO 字段 | 全部加 `@Schema`；必填字段加 `@NotNull` / `@NotBlank` |
-| 匿名接口 | `@Anonymous`（定义在 quanle-common） |
+| 匿名接口 | `@Anonymous`（定义在 isiniu-common） |
 
 ### 5.2 字段类型
 
@@ -214,7 +214,7 @@ bootstrap ──► web ──► kernel ──► quanle-common
 - 使用 MapStruct：`@Mapper(imports = {DataParseUtil.class})`，定义 `INSTANCE = Mappers.getMapper(...)`。
 - Service 层赋值的字段用 `@Mapping(target = "xxx", ignore = true)`。
 - 转换在 Service 层完成：Request → BO → Model；Model / BO → Response。
-- `DataParseUtil` 在 `com.quanle.common.util`。
+- `DataParseUtil` 在 `com.isiniu.common.util`。
 
 ### 5.6 其他
 
@@ -228,9 +228,9 @@ bootstrap ──► web ──► kernel ──► quanle-common
 
 1. 业务异常统一抛 `CustomException`，**必须带错误码**：`throw new CustomException(ErrorCodeEnum.XXX, "补充说明")`。第三方失败时保留原始异常作为 cause。
 2. 错误码格式为「模块前缀 + 4 位序号」。
-   - 框架公共错误码在 `CommonErrorCode`，前缀 `SYS`，放在 quanle-common。
+   - 框架公共错误码在 `CommonErrorCode`，前缀 `SYS`，放在 isiniu-common。
    - 业务错误码在各领域的 `ErrorCodeEnum`，前缀用【项目配置】的模块前缀，序号落在 kernel `ErrorCodeRange` 分配的号段内。同一错误码全项目只有一个含义。
-3. 全局异常处理器统一转换为 `CommonResult`，Controller 内不写 `try-catch`。处理器由 quanle-common 自动配置提供。
+3. 全局异常处理器统一转换为 `CommonResult`，Controller 内不写 `try-catch`。处理器由 isiniu-common 自动配置提供。
 4. 禁止：空 `catch`、`catch` 后只打日志不处理且不说明原因、`e.printStackTrace()`、用异常做流程控制。
 
 ---
@@ -383,4 +383,4 @@ bootstrap ──► web ──► kernel ──► quanle-common
 | 金额用 `double/float` | `BigDecimal` |
 | GET 请求用 `@RequestBody` | 直接接收对象 |
 | 未经确认新增依赖、改表、改公共接口 | 停下来列方案，等人确认 |
-| 把 quanle-common 源码复制进业务项目 | 依赖 jar |
+| 把 isiniu-common 源码复制进业务项目 | 依赖 jar |

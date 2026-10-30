@@ -4,24 +4,24 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.quanle</groupId>
-    <artifactId>quanle-parent</artifactId>
+    <groupId>com.isiniu</groupId>
+    <artifactId>isiniu-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>quanle-parent</name>
-    <description>全乐 Java 后端脚手架父 POM，统一依赖与插件版本。</description>
+    <name>isiniu-parent</name>
+    <description>isiniu Java 后端脚手架父 POM，统一依赖与插件版本。</description>
 
     <modules>
-        <module>quanle-common</module>
-        <module>quanle-demo</module>
-        <module>quanle-single-demo</module>
-        <module>quanle-archetype-modular</module>
-        <module>quanle-archetype-single</module>
+        <module>isiniu-common</module>
+        <module>isiniu-demo</module>
+        <module>isiniu-single-demo</module>
+        <module>isiniu-archetype-modular</module>
+        <module>isiniu-archetype-single</module>
     </modules>
 
     <properties>
-        <quanle.version>1.0.0-SNAPSHOT</quanle.version>
+        <isiniu.version>1.0.0-SNAPSHOT</isiniu.version>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -61,9 +61,9 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.quanle</groupId>
-                <artifactId>quanle-common</artifactId>
-                <version>${quanle.version}</version>
+                <groupId>com.isiniu</groupId>
+                <artifactId>isiniu-common</artifactId>
+                <version>${isiniu.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -162,7 +162,7 @@
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>quanle-baseline</id>
+                        <id>isiniu-baseline</id>
                         <goals>
                             <goal>enforce</goal>
                         </goals>
