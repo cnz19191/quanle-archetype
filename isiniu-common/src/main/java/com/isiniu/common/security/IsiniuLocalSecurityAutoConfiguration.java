@@ -1,7 +1,6 @@
 package com.isiniu.common.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.isiniu.common.config.IsiniuCorsAutoConfiguration;
 import com.isiniu.common.enums.CommonErrorCode;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,7 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *
  * @author isiniu
  */
-@AutoConfiguration(before = SecurityAutoConfiguration.class, after = IsiniuCorsAutoConfiguration.class)
+@AutoConfiguration(before = SecurityAutoConfiguration.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass({SecurityFilterChain.class, JwtDecoder.class})
 @ConditionalOnProperty(prefix = "isiniu.auth", name = "mode", havingValue = "local", matchIfMissing = true)

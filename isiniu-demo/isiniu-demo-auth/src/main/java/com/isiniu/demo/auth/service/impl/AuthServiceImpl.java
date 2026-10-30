@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
         }
         if (record.getExpiresAt() == null || record.getExpiresAt().isBefore(LocalDateTime.now())) {
             log.warn("[刷新令牌失败] reason=expired, userId={}", record.getUserId());
-            throw new CustomException(ErrorCodeEnum.AUTH_REFRESH_EXPIRED);
+            throw new CustomException(ErrorCodeEnum.AUTH_REFRESH_EXPIRED, "refreshToken 已过期");
         }
         UserModel user = userRepository.getById(record.getUserId());
         if (user == null) {

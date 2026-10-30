@@ -33,5 +33,6 @@ public interface AuthConvert {
      * @param model 用户表实体
      * @return 当前用户
      */
+    @Mapping(target = "roles", ignore = true)
     LoginUserResponse toLoginUserResponse(UserModel model);
 }
